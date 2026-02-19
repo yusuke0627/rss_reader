@@ -1,4 +1,10 @@
-import { MarkEntryRead, RegisterFeed, SearchEntries } from "@/application/use-cases";
+import {
+  MarkEntryRead,
+  MarkEntryUnread,
+  RegisterFeed,
+  SearchEntries,
+  ToggleBookmark,
+} from "@/application/use-cases";
 import { createRepositories } from "@/infrastructure/db";
 import { RssFetcherHttp } from "@/infrastructure/rss/rss-fetcher-http";
 
@@ -16,6 +22,18 @@ export function createRegisterFeedUseCase(): RegisterFeed {
 
 export function createMarkEntryReadUseCase(): MarkEntryRead {
   return new MarkEntryRead({
+    entryRepository: repositories.entryRepository,
+  });
+}
+
+export function createMarkEntryUnreadUseCase(): MarkEntryUnread {
+  return new MarkEntryUnread({
+    entryRepository: repositories.entryRepository,
+  });
+}
+
+export function createToggleBookmarkUseCase(): ToggleBookmark {
+  return new ToggleBookmark({
     entryRepository: repositories.entryRepository,
   });
 }
