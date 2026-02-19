@@ -15,6 +15,7 @@ export class MarkEntryUnread {
   constructor(private readonly deps: MarkEntryUnreadDependencies) {}
 
   async execute(input: MarkEntryUnreadInput): Promise<UserEntry> {
+    // read と同様、先に可視性チェックしてから状態更新する。
     const entry = await this.deps.entryRepository.findByIdForUser({
       userId: input.userId,
       entryId: input.entryId,

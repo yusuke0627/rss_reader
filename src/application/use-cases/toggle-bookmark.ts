@@ -16,6 +16,7 @@ export class ToggleBookmark {
   constructor(private readonly deps: ToggleBookmarkDependencies) {}
 
   async execute(input: ToggleBookmarkInput): Promise<UserEntry> {
+    // 他人のentryを更新できないよう、対象の所属を検証する。
     const entry = await this.deps.entryRepository.findByIdForUser({
       userId: input.userId,
       entryId: input.entryId,

@@ -76,6 +76,7 @@ export class TursoUserRepository implements UserRepository {
     name?: string | null;
     image?: string | null;
   }): Promise<User> {
+    // Auth.js の user.id を優先して使うため、id指定があればまずそれで存在確認する。
     if (input.id) {
       const existingById = await this.findById(input.id);
       if (existingById) {
@@ -91,6 +92,7 @@ export class TursoUserRepository implements UserRepository {
         INSERT INTO users (id, email, name, image, created_at)
         VALUES (?, ?, ?, ?, ?)
         ON CONFLICT(email) DO UPDATE SET
+          -- email重複時は profile情報だけ更新し、id は既存を維持する。
           name = COALESCE(excluded.name, users.name),
           image = COALESCE(excluded.image, users.image)
       `,

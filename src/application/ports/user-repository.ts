@@ -1,5 +1,6 @@
 import type { PublicProfile, User } from "@/domain/entities";
 
+// 認証ユーザーの同期と公開プロフィール管理の契約。
 export interface UserRepository {
   findById(id: string): Promise<User | null>;
   findByEmail(email: string): Promise<User | null>;

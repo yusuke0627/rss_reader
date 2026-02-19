@@ -78,10 +78,12 @@ export function HomeClient() {
   const queryClient = useQueryClient();
   const { draftUrl, setDraftUrl, clear } = useFeedFormStore();
 
+  // UIローカル状態（検索条件や操作中のentry）は React state で管理。
   const [search, setSearch] = useState("");
   const [unreadOnly, setUnreadOnly] = useState(false);
   const [activeEntryId, setActiveEntryId] = useState<string | null>(null);
 
+  // Server state は TanStack Query で管理する。
   const entriesQuery = useQuery({
     queryKey: ["entries", { unreadOnly, search }],
     queryFn: () => fetchEntries({ unreadOnly, search }),
@@ -91,6 +93,7 @@ export function HomeClient() {
     mutationFn: createFeed,
     onSuccess: async () => {
       clear();
+      // Feed追加後は一覧を再取得して表示を同期する。
       await queryClient.invalidateQueries({ queryKey: ["entries"] });
     },
   });
@@ -104,6 +107,7 @@ export function HomeClient() {
       await postEntryAction(input.entryId, input.action);
     },
     onSuccess: async () => {
+      // read/bookmark 操作後も一覧を再取得する。
       await queryClient.invalidateQueries({ queryKey: ["entries"] });
     },
     onSettled: () => {

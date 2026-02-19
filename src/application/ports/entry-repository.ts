@@ -1,5 +1,7 @@
 import type { Entry, UserEntry } from "@/domain/entities";
 
+// Entryの取得・更新に関する契約。
+// `user_entry` の read/bookmark 状態はここ経由で更新する。
 export interface EntryFilter {
   userId: string;
   feedId?: string;

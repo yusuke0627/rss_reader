@@ -30,6 +30,9 @@ export interface RepositorySet {
 }
 
 export function createRepositories(): RepositorySet {
+  // 実行環境に応じて実装を切り替える。
+  // - 本番/接続済み: Turso実装
+  // - ローカル簡易検証: in-memory実装
   if (isTursoConfigured()) {
     return {
       feedRepository: new TursoFeedRepository(),

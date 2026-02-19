@@ -15,6 +15,7 @@ export default function RootLayout({
   return (
     <html lang="ja">
       <body>
+        {/* Client-side provider (TanStack Query) の注入ポイント */}
         <Providers>{children}</Providers>
       </body>
     </html>

@@ -8,6 +8,8 @@ import {
 import { createRepositories } from "@/infrastructure/db";
 import { RssFetcherHttp } from "@/infrastructure/rss/rss-fetcher-http";
 
+// route.ts から use case を作る入口。
+// 依存注入ポイントを1箇所に寄せることで、各routeの責務を薄く保つ。
 const repositories = createRepositories();
 
 const rssFetcher = new RssFetcherHttp();

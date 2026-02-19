@@ -24,6 +24,7 @@ export class SearchEntries {
     const query = input.search?.trim();
 
     if (query) {
+      // 検索語がある場合は FTS を使う専用Repositoryへ委譲。
       return this.deps.searchRepository.searchEntries({
         userId: input.userId,
         query,
@@ -36,6 +37,7 @@ export class SearchEntries {
       });
     }
 
+    // 検索語なしは通常一覧（filter）を使う。
     return this.deps.entryRepository.listByFilter({
       userId: input.userId,
       feedId: input.feedId,
