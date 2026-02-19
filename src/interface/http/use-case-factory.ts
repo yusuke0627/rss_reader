@@ -1,4 +1,4 @@
-import { MarkEntryRead, RegisterFeed } from "@/application/use-cases";
+import { MarkEntryRead, RegisterFeed, SearchEntries } from "@/application/use-cases";
 import { createRepositories } from "@/infrastructure/db";
 import { RssFetcherHttp } from "@/infrastructure/rss/rss-fetcher-http";
 
@@ -17,5 +17,12 @@ export function createRegisterFeedUseCase(): RegisterFeed {
 export function createMarkEntryReadUseCase(): MarkEntryRead {
   return new MarkEntryRead({
     entryRepository: repositories.entryRepository,
+  });
+}
+
+export function createSearchEntriesUseCase(): SearchEntries {
+  return new SearchEntries({
+    entryRepository: repositories.entryRepository,
+    searchRepository: repositories.searchRepository,
   });
 }
