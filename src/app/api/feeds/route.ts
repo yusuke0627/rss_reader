@@ -1,21 +1,14 @@
 import { InvalidFeedUrlError } from "@/application/use-cases";
+import { registerFeedSchema } from "@/interface/http/schemas/register-feed-schema";
 import { requireUserId, UnauthorizedError } from "@/interface/http/auth-user";
 import { createRegisterFeedUseCase } from "@/interface/http/use-case-factory";
 import { NextRequest, NextResponse } from "next/server";
-
-interface RegisterFeedBody {
-  url?: string;
-  folderId?: string | null;
-}
+import { ZodError } from "zod";
 
 export async function POST(request: NextRequest) {
   try {
     const userId = await requireUserId();
-    const body = (await request.json()) as RegisterFeedBody;
-
-    if (!body.url) {
-      return NextResponse.json({ error: "url is required" }, { status: 400 });
-    }
+    const body = registerFeedSchema.parse(await request.json());
 
     const useCase = createRegisterFeedUseCase();
     const result = await useCase.execute({
@@ -32,6 +25,13 @@ export async function POST(request: NextRequest) {
 
     if (error instanceof InvalidFeedUrlError) {
       return NextResponse.json({ error: error.message }, { status: 400 });
+    }
+
+    if (error instanceof ZodError) {
+      return NextResponse.json(
+        { error: "Invalid request body", issues: error.issues },
+        { status: 400 },
+      );
     }
 
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
