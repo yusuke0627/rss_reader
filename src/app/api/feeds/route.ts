@@ -1,6 +1,6 @@
 import { InvalidFeedUrlError } from "@/application/use-cases";
 import { registerFeedSchema } from "@/interface/http/schemas/register-feed-schema";
-import { requireUserId, UnauthorizedError } from "@/interface/http/auth-user";
+import { InvalidSessionError, requireUserId, UnauthorizedError } from "@/interface/http/auth-user";
 import { createRegisterFeedUseCase } from "@/interface/http/use-case-factory";
 import { NextRequest, NextResponse } from "next/server";
 import { ZodError } from "zod";
@@ -19,7 +19,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(result, { status: 201 });
   } catch (error) {
-    if (error instanceof UnauthorizedError) {
+    if (error instanceof UnauthorizedError || error instanceof InvalidSessionError) {
       return NextResponse.json({ error: error.message }, { status: 401 });
     }
 
@@ -34,6 +34,14 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+    const detail = error instanceof Error ? error.message : "Unknown error";
+    console.error("POST /api/feeds failed:", error);
+    return NextResponse.json(
+      {
+        error: "Internal Server Error",
+        detail: process.env.NODE_ENV === "development" ? detail : undefined,
+      },
+      { status: 500 },
+    );
   }
 }

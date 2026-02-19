@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { ZodError } from "zod";
-import { requireUserId, UnauthorizedError } from "@/interface/http/auth-user";
+import { InvalidSessionError, requireUserId, UnauthorizedError } from "@/interface/http/auth-user";
 import { createSearchEntriesUseCase } from "@/interface/http/use-case-factory";
 import { searchEntriesQuerySchema } from "@/interface/http/schemas/search-entries-query-schema";
 
@@ -25,7 +25,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ entries }, { status: 200 });
   } catch (error) {
-    if (error instanceof UnauthorizedError) {
+    if (error instanceof UnauthorizedError || error instanceof InvalidSessionError) {
       return NextResponse.json({ error: error.message }, { status: 401 });
     }
 
