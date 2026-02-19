@@ -40,6 +40,12 @@ function parseDate(value: string | null): Date | null {
 export class RssFetcherHttp implements RssFetcher {
   async fetchFeed(input: FetchFeedInput): Promise<FetchedFeed> {
     const headers = new Headers();
+    headers.set(
+      "Accept",
+      "application/rss+xml, application/atom+xml, application/xml, text/xml;q=0.9, */*;q=0.1",
+    );
+    headers.set("User-Agent", "rss-reader/0.1 (+https://github.com/yusuke0627/rss_reader)");
+    headers.set("Accept-Language", "ja,en-US;q=0.8,en;q=0.6");
     if (input.etag) {
       headers.set("If-None-Match", input.etag);
     }
@@ -51,6 +57,7 @@ export class RssFetcherHttp implements RssFetcher {
       method: "GET",
       headers,
       redirect: "follow",
+      signal: AbortSignal.timeout(20_000),
     });
 
     if (response.status === 304) {

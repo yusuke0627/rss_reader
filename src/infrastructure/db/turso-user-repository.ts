@@ -71,12 +71,20 @@ export class TursoUserRepository implements UserRepository {
   }
 
   async create(input: {
+    id?: string;
     email: string;
     name?: string | null;
     image?: string | null;
   }): Promise<User> {
+    if (input.id) {
+      const existingById = await this.findById(input.id);
+      if (existingById) {
+        return existingById;
+      }
+    }
+
     const db = getTursoClient();
-    const id = crypto.randomUUID();
+    const id = input.id ?? crypto.randomUUID();
 
     await db.execute({
       sql: `

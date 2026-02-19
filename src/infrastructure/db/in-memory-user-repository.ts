@@ -12,17 +12,25 @@ export class InMemoryUserRepository implements UserRepository {
   }
 
   async create(input: {
+    id?: string;
     email: string;
     name?: string | null;
     image?: string | null;
   }): Promise<User> {
+    if (input.id) {
+      const existingById = await this.findById(input.id);
+      if (existingById) {
+        return existingById;
+      }
+    }
+
     const existing = await this.findByEmail(input.email);
     if (existing) {
       return existing;
     }
 
     const user: User = {
-      id: createId(),
+      id: input.id ?? createId(),
       email: input.email,
       name: input.name ?? null,
       image: input.image ?? null,
