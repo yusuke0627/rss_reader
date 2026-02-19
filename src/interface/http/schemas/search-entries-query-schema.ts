@@ -1,5 +1,6 @@
 import { z } from "zod";
 
+// クエリ文字列はすべて string で届くため、ここで型変換も行う。
 const unreadSchema = z
   .enum(["1", "0", "true", "false"])
   .optional()

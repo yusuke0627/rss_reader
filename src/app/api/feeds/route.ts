@@ -7,9 +7,12 @@ import { ZodError } from "zod";
 
 export async function POST(request: NextRequest) {
   try {
+    // 1) 認証と users整合を通す。
     const userId = await requireUserId();
+    // 2) リクエストを zod で検証。
     const body = registerFeedSchema.parse(await request.json());
 
+    // 3) UseCase に業務ロジックを委譲。
     const useCase = createRegisterFeedUseCase();
     const result = await useCase.execute({
       userId,

@@ -6,11 +6,14 @@ import { searchEntriesQuerySchema } from "@/interface/http/schemas/search-entrie
 
 export async function GET(request: NextRequest) {
   try {
+    // 1) 認証と users整合。
     const userId = await requireUserId();
+    // 2) クエリ文字列を zod で構造化。
     const query = searchEntriesQuerySchema.parse(
       Object.fromEntries(request.nextUrl.searchParams.entries()),
     );
 
+    // 3) 一覧取得ロジックは UseCase に委譲。
     const useCase = createSearchEntriesUseCase();
     const entries = await useCase.execute({
       userId,

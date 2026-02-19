@@ -40,6 +40,7 @@ function parseDate(value: string | null): Date | null {
 export class RssFetcherHttp implements RssFetcher {
   async fetchFeed(input: FetchFeedInput): Promise<FetchedFeed> {
     const headers = new Headers();
+    // 一部サイトは Accept/User-Agent に厳しいため、明示的に付与する。
     headers.set(
       "Accept",
       "application/rss+xml, application/atom+xml, application/xml, text/xml;q=0.9, */*;q=0.1",
@@ -57,10 +58,12 @@ export class RssFetcherHttp implements RssFetcher {
       method: "GET",
       headers,
       redirect: "follow",
+      // 永続ハングを避けるため明示タイムアウト。
       signal: AbortSignal.timeout(20_000),
     });
 
     if (response.status === 304) {
+      // 差分なし。entry配列は空で返す。
       return {
         title: input.url,
         siteUrl: null,
@@ -86,6 +89,7 @@ export class RssFetcherHttp implements RssFetcher {
       ...body.matchAll(/<entry[\s\S]*?<\/entry>/gi),
     ].map((m) => m[0]);
 
+    // RSS(item) と Atom(entry) を同じ構造へ正規化。
     const entries = itemBlocks.slice(0, 200).map((block, idx) => {
       const link = extractLink(block) ?? `${input.url}#${idx}`;
       const guid = pickFirstTagValue(block, ["guid", "id"]) ?? link;

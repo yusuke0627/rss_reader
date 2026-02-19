@@ -8,9 +8,11 @@ export async function POST(
   context: { params: Promise<{ id: string }> },
 ) {
   try {
+    // 認証と users整合を通したうえで対象entryを更新する。
     const userId = await requireUserId();
     const { id } = await context.params;
 
+    // route層ではUseCase呼び出しのみに集中する。
     const useCase = createMarkEntryReadUseCase();
     const result = await useCase.execute({
       userId,

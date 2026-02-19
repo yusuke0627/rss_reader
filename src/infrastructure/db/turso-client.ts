@@ -3,6 +3,7 @@ import { createClient, type Client } from "@libsql/client";
 let client: Client | null = null;
 
 export function isTursoConfigured(): boolean {
+  // 2つ揃っているときだけ Turso 実装を有効化する。
   return Boolean(process.env.TURSO_DATABASE_URL && process.env.TURSO_AUTH_TOKEN);
 }
 

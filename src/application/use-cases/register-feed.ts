@@ -30,8 +30,10 @@ export class RegisterFeed {
   constructor(private readonly deps: RegisterFeedDependencies) {}
 
   async execute(input: RegisterFeedInput): Promise<RegisterFeedResult> {
+    // 1) URLを正規化して不正入力を早期に弾く。
     const normalizedUrl = this.normalizeUrl(input.url);
 
+    // 2) 既存feedがあれば再利用、なければ新規作成。
     let feed = await this.deps.feedRepository.findByUrl(normalizedUrl);
     let fetched = null as Awaited<ReturnType<RssFetcher["fetchFeed"]>> | null;
 
@@ -44,12 +46,14 @@ export class RegisterFeed {
       });
     }
 
+    // 3) ETag/Last-Modified を使って差分取得。
     fetched ??= await this.deps.rssFetcher.fetchFeed({
       url: feed.url,
       etag: feed.etag,
       lastModified: feed.lastModified,
     });
 
+    // 4) 更新があるときのみ entries を保存。
     let insertedEntryCount = 0;
     if (!fetched.notModified && fetched.entries.length > 0) {
       insertedEntryCount = await this.deps.entryRepository.saveFetchedEntries({
@@ -58,6 +62,7 @@ export class RegisterFeed {
       });
     }
 
+    // 5) 次回差分取得のために fetch メタ情報を更新。
     await this.deps.feedRepository.updateFetchMetadata({
       feedId: feed.id,
       etag: fetched.etag ?? null,
@@ -65,6 +70,7 @@ export class RegisterFeed {
       lastFetchedAt: new Date(),
     });
 
+    // 6) ユーザー購読を作成して完了。
     const subscription = await this.deps.feedRepository.createSubscription({
       userId: input.userId,
       feedId: feed.id,

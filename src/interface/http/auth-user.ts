@@ -16,6 +16,8 @@ export class InvalidSessionError extends Error {
 }
 
 export async function requireUserId(): Promise<string> {
+  // API の共通認証ゲート。
+  // route.ts からはこの関数だけ呼べば「認証 + users整合」を担保できる。
   const session = await auth();
   const user = session?.user;
   const userId = user?.id;
@@ -27,6 +29,7 @@ export async function requireUserId(): Promise<string> {
     throw new InvalidSessionError();
   }
 
+  // 外部キー(user_id -> users.id)で失敗しないよう、認証済みユーザーを必ず作成/更新する。
   const repositories = createRepositories();
   await repositories.userRepository.create({
     id: userId,

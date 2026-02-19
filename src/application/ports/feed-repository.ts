@@ -1,5 +1,7 @@
 import type { Feed, Subscription } from "@/domain/entities";
 
+// UseCase から見た「フィード永続化」の契約。
+// 実体は Turso 実装 / in-memory 実装で差し替える。
 export interface CreateFeedInput {
   url: string;
   title: string;
