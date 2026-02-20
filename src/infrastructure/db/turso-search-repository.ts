@@ -38,12 +38,14 @@ export class TursoSearchRepository implements SearchRepository {
   async searchEntries(input: SearchEntriesInput): Promise<Entry[]> {
     const db = getTursoClient();
 
-    const conditions: string[] = [
-      "fts MATCH ?",
-      "s.user_id = ?",
-    ];
+    const conditions: string[] = ["entries_fts MATCH ?", "s.user_id = ?"];
 
-    const args: Array<string | number> = [input.query, input.userId];
+    const ftsQuery = input.query
+      .trim()
+      .split(/\s+/)
+      .map((term) => `${term}*`)
+      .join(" ");
+    const args: Array<string | number> = [ftsQuery, input.userId];
 
     if (input.feedId) {
       conditions.push("e.feed_id = ?");

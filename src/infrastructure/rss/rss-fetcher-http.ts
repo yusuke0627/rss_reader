@@ -1,8 +1,18 @@
-import type { FetchFeedInput, FetchedFeed, RssFetcher } from "@/application/ports";
+import type {
+  FetchFeedInput,
+  FetchedFeed,
+  RssFetcher,
+} from "@/application/ports";
 
 function pickFirstTagValue(source: string, tagNames: string[]): string | null {
-  for (const tag of tagNames) {
-    const re = new RegExp(`<${tag}[^>]*>([\\s\\S]*?)<\\/${tag}>`, "i");
+  for (const tagName of tagNames) {
+    // If the tag name contains '>', we only look for the leaf tag for simplicity,
+    // but try to find it within the parent context if possible.
+    // For now, let's just match the leaf tag but ensure it's not preceded by something that breaks it.
+    const leafTag = tagName.includes(">") ? tagName.split(">").pop()! : tagName;
+
+    // We use a regex that matches <tag>content</tag> or <tag />.
+    const re = new RegExp(`<${leafTag}[^>]*>([\\s\\S]*?)<\\/${leafTag}>`, "i");
     const m = source.match(re);
     if (m?.[1]) {
       return decodeXml(m[1].trim());
@@ -12,7 +22,9 @@ function pickFirstTagValue(source: string, tagNames: string[]): string | null {
 }
 
 function extractLink(block: string): string | null {
-  const atomLink = block.match(/<link[^>]*href=["']([^"']+)["'][^>]*\/?>(?:<\/link>)?/i);
+  const atomLink = block.match(
+    /<link[^>]*href=["']([^"']+)["'][^>]*\/?>(?:<\/link>)?/i,
+  );
   if (atomLink?.[1]) {
     return decodeXml(atomLink[1]);
   }
@@ -45,7 +57,10 @@ export class RssFetcherHttp implements RssFetcher {
       "Accept",
       "application/rss+xml, application/atom+xml, application/xml, text/xml;q=0.9, */*;q=0.1",
     );
-    headers.set("User-Agent", "rss-reader/0.1 (+https://github.com/yusuke0627/rss_reader)");
+    headers.set(
+      "User-Agent",
+      "rss-reader/0.1 (+https://github.com/yusuke0627/rss_reader)",
+    );
     headers.set("Accept-Language", "ja,en-US;q=0.8,en;q=0.6");
     if (input.etag) {
       headers.set("If-None-Match", input.etag);
@@ -80,8 +95,12 @@ export class RssFetcherHttp implements RssFetcher {
 
     const body = await response.text();
 
-    const title =
-      pickFirstTagValue(body, ["channel>title", "feed>title", "title"]) ?? input.url;
+    const titleMatch = pickFirstTagValue(body, [
+      "channel>title",
+      "feed>title",
+      "title",
+    ]);
+    const title = titleMatch ?? input.url;
     const siteUrl = extractLink(body);
 
     const itemBlocks = [
@@ -97,10 +116,19 @@ export class RssFetcherHttp implements RssFetcher {
         guid,
         title: pickFirstTagValue(block, ["title"]) ?? link,
         url: link,
-        content:
-          pickFirstTagValue(block, ["content:encoded", "content", "description", "summary"]),
+        content: pickFirstTagValue(block, [
+          "content:encoded",
+          "content",
+          "description",
+          "summary",
+        ]),
         publishedAt: parseDate(
-          pickFirstTagValue(block, ["pubDate", "published", "updated", "dc:date"]),
+          pickFirstTagValue(block, [
+            "pubDate",
+            "published",
+            "updated",
+            "dc:date",
+          ]),
         ),
         author: pickFirstTagValue(block, ["author", "dc:creator"]),
       };

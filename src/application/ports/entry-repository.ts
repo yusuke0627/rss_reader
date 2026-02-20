@@ -28,9 +28,16 @@ export interface SaveFetchedEntriesInput {
 
 export interface EntryRepository {
   listByFilter(filter: EntryFilter): Promise<Entry[]>;
-  findByIdForUser(input: { userId: string; entryId: string }): Promise<Entry | null>;
-  saveFetchedEntries(input: SaveFetchedEntriesInput): Promise<number>;
-  markAsRead(input: { userId: string; entryId: string; readAt: Date }): Promise<UserEntry>;
+  findByIdForUser(input: {
+    userId: string;
+    entryId: string;
+  }): Promise<Entry | null>;
+  saveFetchedEntries(input: SaveFetchedEntriesInput): Promise<string[]>;
+  markAsRead(input: {
+    userId: string;
+    entryId: string;
+    readAt: Date;
+  }): Promise<UserEntry>;
   markAsUnread(input: { userId: string; entryId: string }): Promise<UserEntry>;
   toggleBookmark(input: {
     userId: string;
