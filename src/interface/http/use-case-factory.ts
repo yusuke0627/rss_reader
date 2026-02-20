@@ -75,7 +75,6 @@ export function createExportOpmlUseCase(): ExportOpml {
     feedRepository: repositories.feedRepository,
   });
 }
-
 export function createSyncFeedsUseCase(): SyncFeeds {
   return new SyncFeeds({
     feedRepository: repositories.feedRepository,
