@@ -1,5 +1,9 @@
 import type { Feed, Subscription } from "@/domain/entities";
-import type { EntryRepository, FeedRepository, RssFetcher } from "@/application/ports";
+import type {
+  EntryRepository,
+  FeedRepository,
+  RssFetcher,
+} from "@/application/ports";
 
 export interface RegisterFeedInput {
   userId: string;
