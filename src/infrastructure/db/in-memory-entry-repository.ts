@@ -1,4 +1,8 @@
-import type { EntryRepository, EntryFilter, SaveFetchedEntriesInput } from "@/application/ports";
+import type {
+  EntryRepository,
+  EntryFilter,
+  SaveFetchedEntriesInput,
+} from "@/application/ports";
 import type { Entry, UserEntry } from "@/domain/entities";
 import { createId, inMemoryStore } from "./in-memory-store";
 
@@ -18,7 +22,9 @@ export class InMemoryEntryRepository implements EntryRepository {
 
     return inMemoryStore.entries
       .filter((entry) => subscribedFeedIds.has(entry.feedId))
-      .filter((entry) => (filter.feedId ? entry.feedId === filter.feedId : true))
+      .filter((entry) =>
+        filter.feedId ? entry.feedId === filter.feedId : true,
+      )
       .filter((entry) => {
         if (!filter.unreadOnly) return true;
         return !userEntriesById.get(entry.id)?.isRead;
@@ -43,22 +49,28 @@ export class InMemoryEntryRepository implements EntryRepository {
       .slice(0, filter.limit ?? 50);
   }
 
-  async findByIdForUser(input: { userId: string; entryId: string }): Promise<Entry | null> {
-    const entry = inMemoryStore.entries.find((item) => item.id === input.entryId);
+  async findByIdForUser(input: {
+    userId: string;
+    entryId: string;
+  }): Promise<Entry | null> {
+    const entry = inMemoryStore.entries.find(
+      (item) => item.id === input.entryId,
+    );
     if (!entry) {
       return null;
     }
 
     const isSubscribed = inMemoryStore.subscriptions.some(
       (subscription) =>
-        subscription.userId === input.userId && subscription.feedId === entry.feedId,
+        subscription.userId === input.userId &&
+        subscription.feedId === entry.feedId,
     );
 
     return isSubscribed ? entry : null;
   }
 
-  async saveFetchedEntries(input: SaveFetchedEntriesInput): Promise<number> {
-    let insertedCount = 0;
+  async saveFetchedEntries(input: SaveFetchedEntriesInput): Promise<string[]> {
+    const insertedIds: string[] = [];
 
     for (const item of input.entries) {
       // UNIQUE(feed_id, guid)
@@ -70,8 +82,9 @@ export class InMemoryEntryRepository implements EntryRepository {
         continue;
       }
 
+      const id = createId();
       const entry: Entry = {
-        id: createId(),
+        id,
         feedId: input.feedId,
         guid: item.guid,
         title: item.title,
@@ -83,20 +96,27 @@ export class InMemoryEntryRepository implements EntryRepository {
       };
 
       inMemoryStore.entries.push(entry);
-      insertedCount += 1;
+      insertedIds.push(id);
     }
 
-    return insertedCount;
+    return insertedIds;
   }
 
-  async markAsRead(input: { userId: string; entryId: string; readAt: Date }): Promise<UserEntry> {
+  async markAsRead(input: {
+    userId: string;
+    entryId: string;
+    readAt: Date;
+  }): Promise<UserEntry> {
     const state = this.upsertUserEntry(input.userId, input.entryId);
     state.isRead = true;
     state.readAt = input.readAt;
     return state;
   }
 
-  async markAsUnread(input: { userId: string; entryId: string }): Promise<UserEntry> {
+  async markAsUnread(input: {
+    userId: string;
+    entryId: string;
+  }): Promise<UserEntry> {
     const state = this.upsertUserEntry(input.userId, input.entryId);
     state.isRead = false;
     state.readAt = null;

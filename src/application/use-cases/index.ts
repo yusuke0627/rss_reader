@@ -7,3 +7,4 @@ export * from "./get-public-entries";
 export * from "./import-opml";
 export * from "./export-opml";
 export * from "./sync-feeds";
+export * from "./sync-user";
