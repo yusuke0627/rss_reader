@@ -31,12 +31,12 @@ export async function requireUserId(): Promise<string> {
 
   // 外部キー(user_id -> users.id)で失敗しないよう、認証済みユーザーを必ず作成/更新する。
   const repositories = createRepositories();
-  await repositories.userRepository.create({
+  const dbUser = await repositories.userRepository.create({
     id: userId,
     email: user.email,
     name: user.name ?? null,
     image: user.image ?? null,
   });
 
-  return userId;
+  return dbUser.id;
 }
