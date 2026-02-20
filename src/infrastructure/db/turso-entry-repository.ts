@@ -1,4 +1,8 @@
-import type { EntryFilter, EntryRepository, SaveFetchedEntriesInput } from "@/application/ports";
+import type {
+  EntryFilter,
+  EntryRepository,
+  SaveFetchedEntriesInput,
+} from "@/application/ports";
 import type { Entry, UserEntry } from "@/domain/entities";
 import { getTursoClient } from "./turso-client";
 
@@ -105,7 +109,10 @@ export class TursoEntryRepository implements EntryRepository {
     return result.rows.map((row) => mapEntry(row as Record<string, unknown>));
   }
 
-  async findByIdForUser(input: { userId: string; entryId: string }): Promise<Entry | null> {
+  async findByIdForUser(input: {
+    userId: string;
+    entryId: string;
+  }): Promise<Entry | null> {
     const db = getTursoClient();
     const result = await db.execute({
       sql: `
@@ -122,9 +129,9 @@ export class TursoEntryRepository implements EntryRepository {
     return row ? mapEntry(row) : null;
   }
 
-  async saveFetchedEntries(input: SaveFetchedEntriesInput): Promise<number> {
+  async saveFetchedEntries(input: SaveFetchedEntriesInput): Promise<string[]> {
     const db = getTursoClient();
-    let insertedCount = 0;
+    const insertedIds: string[] = [];
 
     for (const item of input.entries) {
       const id = crypto.randomUUID();
@@ -147,13 +154,19 @@ export class TursoEntryRepository implements EntryRepository {
         ],
       });
 
-      insertedCount += Number(result.rowsAffected ?? 0);
+      if (Number(result.rowsAffected ?? 0) > 0) {
+        insertedIds.push(id);
+      }
     }
 
-    return insertedCount;
+    return insertedIds;
   }
 
-  async markAsRead(input: { userId: string; entryId: string; readAt: Date }): Promise<UserEntry> {
+  async markAsRead(input: {
+    userId: string;
+    entryId: string;
+    readAt: Date;
+  }): Promise<UserEntry> {
     const db = getTursoClient();
     await db.execute({
       sql: `
@@ -168,7 +181,10 @@ export class TursoEntryRepository implements EntryRepository {
     return this.findUserEntry(input.userId, input.entryId);
   }
 
-  async markAsUnread(input: { userId: string; entryId: string }): Promise<UserEntry> {
+  async markAsUnread(input: {
+    userId: string;
+    entryId: string;
+  }): Promise<UserEntry> {
     const db = getTursoClient();
     await db.execute({
       sql: `
@@ -225,7 +241,10 @@ export class TursoEntryRepository implements EntryRepository {
     return result.rows.map((row) => mapEntry(row as Record<string, unknown>));
   }
 
-  private async findUserEntry(userId: string, entryId: string): Promise<UserEntry> {
+  private async findUserEntry(
+    userId: string,
+    entryId: string,
+  ): Promise<UserEntry> {
     const db = getTursoClient();
     const result = await db.execute({
       sql: `

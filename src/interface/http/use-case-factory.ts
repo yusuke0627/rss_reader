@@ -24,6 +24,7 @@ export function createRegisterFeedUseCase(): RegisterFeed {
     feedRepository: repositories.feedRepository,
     entryRepository: repositories.entryRepository,
     rssFetcher,
+    searchRepository: repositories.searchRepository,
   });
 }
 

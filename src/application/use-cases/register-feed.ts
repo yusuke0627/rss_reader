@@ -3,6 +3,7 @@ import type {
   EntryRepository,
   FeedRepository,
   RssFetcher,
+  SearchRepository,
 } from "@/application/ports";
 
 export interface RegisterFeedInput {
@@ -28,6 +29,7 @@ export interface RegisterFeedDependencies {
   feedRepository: FeedRepository;
   entryRepository: EntryRepository;
   rssFetcher: RssFetcher;
+  searchRepository: SearchRepository;
 }
 
 export class RegisterFeed {
@@ -51,19 +53,31 @@ export class RegisterFeed {
     }
 
     // 3) ETag/Last-Modified を使って差分取得。
+    // ただし、DB側に記事が1件もない場合は、メタ情報を無視して全件取得を試みる（不整合時リカバリ）。
+    const entriesCount = await this.deps.entryRepository.listByFilter({
+      userId: input.userId,
+      feedId: feed.id,
+      limit: 1,
+    });
+
+    const isDbEmpty = entriesCount.length === 0;
+
     fetched ??= await this.deps.rssFetcher.fetchFeed({
       url: feed.url,
-      etag: feed.etag,
-      lastModified: feed.lastModified,
+      etag: isDbEmpty ? undefined : feed.etag,
+      lastModified: isDbEmpty ? undefined : feed.lastModified,
     });
 
     // 4) 更新があるときのみ entries を保存。
-    let insertedEntryCount = 0;
+    let insertedEntryIds: string[] = [];
     if (!fetched.notModified && fetched.entries.length > 0) {
-      insertedEntryCount = await this.deps.entryRepository.saveFetchedEntries({
+      insertedEntryIds = await this.deps.entryRepository.saveFetchedEntries({
         feedId: feed.id,
         entries: fetched.entries,
       });
+
+      // 検索用インデックスを作成。
+      await this.deps.searchRepository.indexEntries(insertedEntryIds);
     }
 
     // 5) 次回差分取得のために fetch メタ情報を更新。
@@ -84,7 +98,7 @@ export class RegisterFeed {
     return {
       feed,
       subscription,
-      insertedEntryCount,
+      insertedEntryCount: insertedEntryIds.length,
     };
   }
 
