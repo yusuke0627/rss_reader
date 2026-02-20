@@ -7,6 +7,7 @@ import {
   GetPublicEntries,
   ImportOpml,
   ExportOpml,
+  SyncFeeds,
 } from "@/application/use-cases";
 import { OpmlServiceImpl } from "@/infrastructure/rss/opml-service-impl";
 import { createRepositories } from "@/infrastructure/db";
@@ -72,5 +73,14 @@ export function createExportOpmlUseCase(): ExportOpml {
   return new ExportOpml({
     opmlService,
     feedRepository: repositories.feedRepository,
+  });
+}
+
+export function createSyncFeedsUseCase(): SyncFeeds {
+  return new SyncFeeds({
+    feedRepository: repositories.feedRepository,
+    entryRepository: repositories.entryRepository,
+    rssFetcher,
+    searchRepository: repositories.searchRepository,
   });
 }
