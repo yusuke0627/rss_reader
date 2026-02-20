@@ -4,3 +4,5 @@ export * from "./register-feed";
 export * from "./search-entries";
 export * from "./toggle-bookmark";
 export * from "./get-public-entries";
+export * from "./import-opml";
+export * from "./export-opml";

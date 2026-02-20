@@ -5,7 +5,10 @@ import {
   SearchEntries,
   ToggleBookmark,
   GetPublicEntries,
+  ImportOpml,
+  ExportOpml,
 } from "@/application/use-cases";
+import { OpmlServiceImpl } from "@/infrastructure/rss/opml-service-impl";
 import { createRepositories } from "@/infrastructure/db";
 import { RssFetcherHttp } from "@/infrastructure/rss/rss-fetcher-http";
 
@@ -14,6 +17,7 @@ import { RssFetcherHttp } from "@/infrastructure/rss/rss-fetcher-http";
 const repositories = createRepositories();
 
 const rssFetcher = new RssFetcherHttp();
+const opmlService = new OpmlServiceImpl();
 
 export function createRegisterFeedUseCase(): RegisterFeed {
   return new RegisterFeed({
@@ -52,5 +56,20 @@ export function createGetPublicEntriesUseCase(): GetPublicEntries {
   return new GetPublicEntries({
     userRepository: repositories.userRepository,
     entryRepository: repositories.entryRepository,
+  });
+}
+
+export function createImportOpmlUseCase(): ImportOpml {
+  return new ImportOpml({
+    opmlService,
+    feedRepository: repositories.feedRepository,
+    folderRepository: repositories.folderRepository,
+  });
+}
+
+export function createExportOpmlUseCase(): ExportOpml {
+  return new ExportOpml({
+    opmlService,
+    feedRepository: repositories.feedRepository,
   });
 }
