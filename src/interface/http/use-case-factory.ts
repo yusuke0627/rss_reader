@@ -8,6 +8,7 @@ import {
   ImportOpml,
   ExportOpml,
   SyncFeeds,
+  SyncUser,
 } from "@/application/use-cases";
 import { OpmlServiceImpl } from "@/infrastructure/rss/opml-service-impl";
 import { createRepositories } from "@/infrastructure/db";
@@ -81,5 +82,11 @@ export function createSyncFeedsUseCase(): SyncFeeds {
     entryRepository: repositories.entryRepository,
     rssFetcher,
     searchRepository: repositories.searchRepository,
+  });
+}
+
+export function createSyncUserUseCase(): SyncUser {
+  return new SyncUser({
+    userRepository: repositories.userRepository,
   });
 }

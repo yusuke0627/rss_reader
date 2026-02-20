@@ -14,6 +14,25 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     }),
   ],
   callbacks: {
+    async signIn({ user }) {
+      if (!user.email || !user.id) return true;
+
+      try {
+        const { createSyncUserUseCase } =
+          await import("@/interface/http/use-case-factory");
+        const useCase = createSyncUserUseCase();
+        await useCase.execute({
+          id: user.id,
+          email: user.email,
+          name: user.name,
+          image: user.image,
+        });
+      } catch (error) {
+        console.error("[Auth] User sync failed:", error);
+      }
+
+      return true;
+    },
     async session({ session, token }) {
       // API 層で user.id を使うため、JWT sub を session に移し替える。
       if (session.user && token.sub) {
