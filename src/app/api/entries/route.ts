@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import { ZodError } from "zod";
-import { InvalidSessionError, requireUserId, UnauthorizedError } from "@/interface/http/auth-user";
+import { requireUserId } from "@/interface/http/auth-user";
 import { createSearchEntriesUseCase } from "@/interface/http/use-case-factory";
 import { searchEntriesQuerySchema } from "@/interface/http/schemas/search-entries-query-schema";
+import { errorResponse } from "@/interface/http/api-error";
 
 export async function GET(request: NextRequest) {
   try {
@@ -28,17 +28,6 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ entries }, { status: 200 });
   } catch (error) {
-    if (error instanceof UnauthorizedError || error instanceof InvalidSessionError) {
-      return NextResponse.json({ error: error.message }, { status: 401 });
-    }
-
-    if (error instanceof ZodError) {
-      return NextResponse.json(
-        { error: "Invalid query parameters", issues: error.issues },
-        { status: 400 },
-      );
-    }
-
-    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+    return errorResponse(error, "GET /api/entries");
   }
 }

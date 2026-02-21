@@ -1,7 +1,7 @@
-import { EntryNotFoundError } from "@/application/use-cases";
-import { InvalidSessionError, requireUserId, UnauthorizedError } from "@/interface/http/auth-user";
+import { requireUserId } from "@/interface/http/auth-user";
 import { createMarkEntryReadUseCase } from "@/interface/http/use-case-factory";
 import { NextRequest, NextResponse } from "next/server";
+import { errorResponse } from "@/interface/http/api-error";
 
 export async function POST(
   _request: NextRequest,
@@ -21,14 +21,6 @@ export async function POST(
 
     return NextResponse.json(result, { status: 200 });
   } catch (error) {
-    if (error instanceof UnauthorizedError || error instanceof InvalidSessionError) {
-      return NextResponse.json({ error: error.message }, { status: 401 });
-    }
-
-    if (error instanceof EntryNotFoundError) {
-      return NextResponse.json({ error: error.message }, { status: 404 });
-    }
-
-    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+    return errorResponse(error, "POST /api/entries/[id]/read");
   }
 }

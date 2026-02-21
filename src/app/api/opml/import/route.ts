@@ -1,10 +1,7 @@
-import {
-  InvalidSessionError,
-  requireUserId,
-  UnauthorizedError,
-} from "@/interface/http/auth-user";
+import { requireUserId } from "@/interface/http/auth-user";
 import { createImportOpmlUseCase } from "@/interface/http/use-case-factory";
 import { NextRequest, NextResponse } from "next/server";
+import { errorResponse } from "@/interface/http/api-error";
 
 export async function POST(request: NextRequest) {
   try {
@@ -14,7 +11,10 @@ export async function POST(request: NextRequest) {
 
     if (!file) {
       return NextResponse.json(
-        { error: "No OPML file provided" },
+        {
+          code: "VALIDATION_ERROR",
+          message: "OPML ファイルが指定されていません",
+        },
         { status: 400 },
       );
     }
@@ -28,21 +28,6 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(result, { status: 200 });
   } catch (error) {
-    if (
-      error instanceof UnauthorizedError ||
-      error instanceof InvalidSessionError
-    ) {
-      return NextResponse.json({ error: error.message }, { status: 401 });
-    }
-
-    const detail = error instanceof Error ? error.message : "Unknown error";
-    console.error("POST /api/opml/import failed:", error);
-    return NextResponse.json(
-      {
-        error: "Internal Server Error",
-        detail: process.env.NODE_ENV === "development" ? detail : undefined,
-      },
-      { status: 500 },
-    );
+    return errorResponse(error, "POST /api/opml/import");
   }
 }

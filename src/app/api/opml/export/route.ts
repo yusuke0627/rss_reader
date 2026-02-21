@@ -1,10 +1,7 @@
-import {
-  InvalidSessionError,
-  requireUserId,
-  UnauthorizedError,
-} from "@/interface/http/auth-user";
+import { requireUserId } from "@/interface/http/auth-user";
 import { createExportOpmlUseCase } from "@/interface/http/use-case-factory";
 import { NextResponse } from "next/server";
+import { errorResponse } from "@/interface/http/api-error";
 
 export async function GET() {
   try {
@@ -21,21 +18,6 @@ export async function GET() {
       },
     });
   } catch (error) {
-    if (
-      error instanceof UnauthorizedError ||
-      error instanceof InvalidSessionError
-    ) {
-      return NextResponse.json({ error: error.message }, { status: 401 });
-    }
-
-    const detail = error instanceof Error ? error.message : "Unknown error";
-    console.error("GET /api/opml/export failed:", error);
-    return NextResponse.json(
-      {
-        error: "Internal Server Error",
-        detail: process.env.NODE_ENV === "development" ? detail : undefined,
-      },
-      { status: 500 },
-    );
+    return errorResponse(error, "GET /api/opml/export");
   }
 }
