@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createSyncFeedsUseCase } from "@/interface/http/use-case-factory";
+import { errorResponse } from "@/interface/http/api-error";
 
 export async function POST(request: Request) {
   // Vercel Cron などで使用される秘密鍵の検証。
@@ -9,7 +10,10 @@ export async function POST(request: Request) {
     process.env.CRON_SECRET &&
     authHeader !== `Bearer ${process.env.CRON_SECRET}`
   ) {
-    return new NextResponse("Unauthorized", { status: 401 });
+    return NextResponse.json(
+      { code: "UNAUTHORIZED", message: "Unauthorized" },
+      { status: 401 },
+    );
   }
 
   try {
@@ -20,12 +24,6 @@ export async function POST(request: Request) {
 
     return NextResponse.json(result);
   } catch (error) {
-    console.error("[Cron] Fetch feeds failed:", error);
-    return NextResponse.json(
-      {
-        error: error instanceof Error ? error.message : "Internal Server Error",
-      },
-      { status: 500 },
-    );
+    return errorResponse(error, "[Cron] Fetch feeds");
   }
 }
