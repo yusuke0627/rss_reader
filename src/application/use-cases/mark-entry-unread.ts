@@ -31,3 +31,5 @@ export class MarkEntryUnread {
     });
   }
 }
+
+export { EntryNotFoundError };

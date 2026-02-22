@@ -8,6 +8,7 @@ export class NotFoundError extends Error {
   }
 }
 
+// UseCaseの引数
 export interface GetPublicEntriesInput {
   slug: string;
   limit?: number;
