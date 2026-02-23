@@ -48,9 +48,12 @@ export class ImportOpml {
       try {
         // Resolve or create folder
         let folderId: string | null = null;
+        // フォルダ名がある
         if (sub.folderName) {
+          // そのフォルダがすでに存在していれば再利用
           if (folderCache.has(sub.folderName)) {
             folderId = folderCache.get(sub.folderName) || null;
+            //　新たなフォルダならば新規作成
           } else {
             const newFolder = await this.deps.folderRepository.create({
               userId: input.userId,
@@ -65,6 +68,7 @@ export class ImportOpml {
         let feed: Feed | null = await this.deps.feedRepository.findByUrl(
           sub.xmlUrl,
         );
+        //DBにfeedが存在しない
         if (!feed) {
           feed = await this.deps.feedRepository.create({
             url: sub.xmlUrl,
@@ -77,7 +81,7 @@ export class ImportOpml {
         await this.deps.feedRepository.createSubscription({
           userId: input.userId,
           feedId: feed.id,
-          folderId,
+          folderId, // folderが存在しなければNull
         });
 
         importedCount++;
