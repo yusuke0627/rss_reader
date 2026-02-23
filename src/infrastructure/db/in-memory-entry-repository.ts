@@ -41,6 +41,13 @@ export class InMemoryEntryRepository implements EntryRepository {
           (entry.content ?? "").toLowerCase().includes(q)
         );
       })
+      .filter((entry) => {
+        if (!filter.tagId) return true;
+        // その記事に指定したタグが紐づいているか(指定したentryId, tagIdであるか)
+        return inMemoryStore.entryTags.some(
+          (et) => et.entryId === entry.id && et.tagId === filter.tagId,
+        );
+      })
       .sort((a, b) => {
         const aTime = a.publishedAt?.getTime() ?? a.createdAt.getTime();
         const bTime = b.publishedAt?.getTime() ?? b.createdAt.getTime();

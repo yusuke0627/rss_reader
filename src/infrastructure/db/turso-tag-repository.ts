@@ -30,7 +30,10 @@ export class TursoTagRepository implements TagRepository {
     return result.rows.map((row) => mapTag(row as Record<string, unknown>));
   }
 
-  async findByIdForUser(input: { userId: string; tagId: string }): Promise<Tag | null> {
+  async findByIdForUser(input: {
+    userId: string;
+    tagId: string;
+  }): Promise<Tag | null> {
     const db = getTursoClient();
     const result = await db.execute({
       sql: `
@@ -73,5 +76,52 @@ export class TursoTagRepository implements TagRepository {
       `,
       args: [input.userId, input.tagId],
     });
+  }
+
+  // 記事にtagをつける
+  async addToEntry(input: { entryId: string; tagId: string }): Promise<void> {
+    const db = getTursoClient();
+    await db.execute({
+      sql: `
+        INSERT OR IGNORE INTO entry_tags (entry_id, tag_id)
+        VALUES (?, ?)
+      `,
+      args: [input.entryId, input.tagId],
+    });
+  }
+
+  // 記事からtagを外す
+  async removeFromEntry(input: {
+    entryId: string;
+    tagId: string;
+  }): Promise<void> {
+    const db = getTursoClient();
+    await db.execute({
+      sql: `
+        DELETE FROM entry_tags
+        WHERE entry_id = ? AND tag_id = ?
+      `,
+      args: [input.entryId, input.tagId],
+    });
+  }
+
+  // 記事に基づくtagの一覧
+  async listByEntryId(input: {
+    entryId: string;
+    userId: string;
+  }): Promise<Tag[]> {
+    const db = getTursoClient();
+    const result = await db.execute({
+      sql: `
+      SELECT t.id, t.user_id, t.name
+      FROM tags t
+      JOIN entry_tags et ON t.id = et.tag_id
+      WHERE et.entry_id = ? AND t.user_id = ?
+      ORDER BY t.name ASC
+      `,
+      args: [input.entryId, input.userId],
+    });
+
+    return result.rows.map((row) => mapTag(row as Record<string, unknown>));
   }
 }
