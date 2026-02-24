@@ -9,6 +9,11 @@ import {
   ExportOpml,
   SyncFeeds,
   SyncUser,
+  AddTagToEntry,
+  CreateTag,
+  DeleteTag,
+  GetEntriesByTag,
+  RemoveTagFromEntry,
 } from "@/application/use-cases";
 import { OpmlServiceImpl } from "@/infrastructure/rss/opml-service-impl";
 import { createRepositories } from "@/infrastructure/db";
@@ -88,5 +93,35 @@ export function createSyncFeedsUseCase(): SyncFeeds {
 export function createSyncUserUseCase(): SyncUser {
   return new SyncUser({
     userRepository: repositories.userRepository,
+  });
+}
+
+export function createAddTagToEntryUseCase(): AddTagToEntry {
+  return new AddTagToEntry({
+    tagRepository: repositories.tagRepository,
+  });
+}
+
+export function createCreateTag(): CreateTag {
+  return new CreateTag({
+    tagRepository: repositories.tagRepository,
+  });
+}
+
+export function createDeleteTag(): DeleteTag {
+  return new DeleteTag({
+    tagRepository: repositories.tagRepository,
+  });
+}
+
+export function createGetEntriesByTagUseCase(): GetEntriesByTag {
+  return new GetEntriesByTag({
+    entryRepository: repositories.entryRepository,
+  });
+}
+
+export function createRemoveTagFromEntryUseCase(): RemoveTagFromEntry {
+  return new RemoveTagFromEntry({
+    tagRepository: repositories.tagRepository,
   });
 }
