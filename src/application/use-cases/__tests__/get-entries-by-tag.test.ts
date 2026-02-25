@@ -11,6 +11,7 @@ function createMockDeps() {
     markAsUnread: vi.fn(),
     toggleBookmark: vi.fn(),
     listPublicEntriesBySlug: vi.fn(),
+    updateSummary: vi.fn(),
   };
 
   return { entryRepository };
@@ -26,6 +27,7 @@ const fakeEntry = {
   publishedAt: new Date(),
   author: "author-1",
   createdAt: new Date(),
+  summary: null,
 };
 
 describe("GetEntriesByTag useCase", () => {

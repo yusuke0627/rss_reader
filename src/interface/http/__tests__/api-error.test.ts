@@ -62,7 +62,6 @@ describe("errorResponse", () => {
         {
           code: "invalid_type",
           expected: "string",
-          received: "undefined",
           path: ["url"],
           message: "Required",
         },

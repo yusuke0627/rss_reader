@@ -5,4 +5,5 @@ export * from "./opml-service";
 export * from "./rss-fetcher";
 export * from "./search-repository";
 export * from "./tag-repository";
+export * from "./summarizer";
 export * from "./user-repository";

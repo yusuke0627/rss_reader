@@ -48,7 +48,6 @@ const fakeFolder: Folder = {
   id: "folder-1",
   userId: "user-1",
   name: "ニュース",
-  createdAt: new Date(),
 };
 
 const fakeFeed: Feed = {
@@ -56,8 +55,6 @@ const fakeFeed: Feed = {
   url: "https://example.com/rss",
   title: "Example Feed",
   siteUrl: "https://example.com",
-  createdAt: new Date(),
-  updatedAt: new Date(),
   lastFetchedAt: null,
   etag: null,
   lastModified: null,
@@ -133,8 +130,6 @@ describe("ImportOpml UseCase", () => {
       url: "https://tech.example.com/feed",
       title: "Tech News",
       siteUrl: "https://tech.example.com",
-      createdAt: new Date(),
-      updatedAt: new Date(),
       lastFetchedAt: null,
       etag: null,
       lastModified: null,

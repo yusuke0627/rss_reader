@@ -9,6 +9,7 @@ import {
   ExportOpml,
   SyncFeeds,
   SyncUser,
+  SummarizeEntry,
   AddTagToEntry,
   CreateTag,
   DeleteTag,
@@ -18,6 +19,7 @@ import {
 import { OpmlServiceImpl } from "@/infrastructure/rss/opml-service-impl";
 import { createRepositories } from "@/infrastructure/db";
 import { RssFetcherHttp } from "@/infrastructure/rss/rss-fetcher-http";
+import { GeminiSummarizer } from "@/infrastructure/ai/gemini-summarizer";
 
 // route.ts から use case を作る入口。
 // 依存注入ポイントを1箇所に寄せることで、各routeの責務を薄く保つ。
@@ -96,6 +98,14 @@ export function createSyncUserUseCase(): SyncUser {
   });
 }
 
+
+export function createSummarizeEntryUseCase(): SummarizeEntry {
+  return new SummarizeEntry({
+    entryRepository: repositories.entryRepository,
+    summarizer: new GeminiSummarizer(),
+  });
+}
+
 export function createAddTagToEntryUseCase(): AddTagToEntry {
   return new AddTagToEntry({
     tagRepository: repositories.tagRepository,
@@ -124,4 +134,5 @@ export function createRemoveTagFromEntryUseCase(): RemoveTagFromEntry {
   return new RemoveTagFromEntry({
     tagRepository: repositories.tagRepository,
   });
+
 }

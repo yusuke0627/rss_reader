@@ -11,6 +11,7 @@ interface EntryItem {
   url: string;
   author: string | null;
   publishedAt: string | null;
+  summary?: string | null;
 }
 
 interface EntriesResponse {
@@ -74,6 +75,18 @@ async function postEntryAction(entryId: string, action: "read" | "unread" | "boo
   }
 }
 
+async function postSummarize(entryId: string) {
+  const response = await fetch(`/api/entries/${entryId}/summarize`, { method: "POST" });
+  if (response.status === 401) {
+    throw new UnauthorizedApiError();
+  }
+  if (!response.ok) {
+    const body = (await response.json().catch(() => ({}))) as { error?: string };
+    throw new Error(body.error ?? `Failed to summarize`);
+  }
+  return response.json() as Promise<EntryItem>;
+}
+
 export function HomeClient() {
   const queryClient = useQueryClient();
   const { draftUrl, setDraftUrl, clear } = useFeedFormStore();
@@ -82,6 +95,10 @@ export function HomeClient() {
   const [search, setSearch] = useState("");
   const [unreadOnly, setUnreadOnly] = useState(false);
   const [activeEntryId, setActiveEntryId] = useState<string | null>(null);
+
+  // summaries キャッシュ: entryId -> summaryText|null
+  // これは UI 側の即時表示用キャッシュ。サーバの entry.summary と併用します。
+  const [summaries, setSummaries] = useState<Record<string, string | null>>({});
 
   // Server state は TanStack Query で管理する。
   const entriesQuery = useQuery({
@@ -115,6 +132,24 @@ export function HomeClient() {
     },
   });
 
+  const summarizeMutation = useMutation({
+    mutationFn: async (entryId: string) => {
+      setActiveEntryId(entryId);
+      return await postSummarize(entryId);
+    },
+    onSuccess: async (entry) => {
+      // サーバが更新済みの Entry を返す想定（summary を含む）
+      if (entry && entry.id) {
+        setSummaries((s) => ({ ...s, [entry.id]: entry.summary ?? null }));
+      }
+      // 一覧に summary が反映される可能性があるので再取得
+      await queryClient.invalidateQueries({ queryKey: ["entries"] });
+    },
+    onSettled: () => {
+      setActiveEntryId(null);
+    },
+  });
+
   const unauthorized = entriesQuery.error instanceof UnauthorizedApiError;
   const errorMessage = useMemo(() => {
     if (entriesQuery.error && !(entriesQuery.error instanceof UnauthorizedApiError)) {
@@ -126,8 +161,11 @@ export function HomeClient() {
     if (entryActionMutation.error && !(entryActionMutation.error instanceof UnauthorizedApiError)) {
       return entryActionMutation.error.message;
     }
+    if (summarizeMutation.error && !(summarizeMutation.error instanceof UnauthorizedApiError)) {
+      return summarizeMutation.error.message;
+    }
     return null;
-  }, [createFeedMutation.error, entriesQuery.error, entryActionMutation.error]);
+  }, [createFeedMutation.error, entriesQuery.error, entryActionMutation.error, summarizeMutation.error]);
 
   return (
     <section className="w-full space-y-6 rounded-xl border border-slate-200 bg-white p-8 shadow-sm">
@@ -221,6 +259,14 @@ export function HomeClient() {
                 {entry.author ?? "Unknown author"}
                 {entry.publishedAt ? ` / ${new Date(entry.publishedAt).toLocaleString()}` : ""}
               </p>
+
+              {/* 要約表示（UIキャッシュ or サーバ返却分） */}
+              {(summaries[entry.id] ?? entry.summary) ? (
+                <div className="mt-2 rounded bg-slate-50 p-2 text-sm text-slate-700">
+                  {(summaries[entry.id] ?? entry.summary) ?? ""}
+                </div>
+              ) : null}
+
               <div className="mt-3 flex flex-wrap gap-2">
                 {(["read", "unread", "bookmark", "unbookmark"] as const).map((action) => (
                   <button
@@ -233,6 +279,16 @@ export function HomeClient() {
                     {action}
                   </button>
                 ))}
+
+                {/* 要約ボタン */}
+                <button
+                  type="button"
+                  onClick={() => summarizeMutation.mutate(entry.id)}
+                  disabled={summarizeMutation.isPending && activeEntryId === entry.id}
+                  className="rounded-md border border-slate-300 px-2 py-1 text-xs"
+                >
+                  {summarizeMutation.isPending && activeEntryId === entry.id ? "Summarizing..." : "Summarize"}
+                </button>
               </div>
             </li>
           ))}

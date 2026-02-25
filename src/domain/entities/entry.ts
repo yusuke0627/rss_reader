@@ -7,5 +7,6 @@ export interface Entry {
   content: string | null;
   publishedAt: Date | null;
   author: string | null;
+  summary: string | null;
   createdAt: Date;
 }

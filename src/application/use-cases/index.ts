@@ -8,6 +8,7 @@ export * from "./import-opml";
 export * from "./export-opml";
 export * from "./sync-feeds";
 export * from "./sync-user";
+export * from "./summarize-entry";
 export * from "./add-tag-to-entry";
 export * from "./create-tag";
 export * from "./delete-tag";

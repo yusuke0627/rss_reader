@@ -20,8 +20,6 @@ const fakeFeeds: Feed[] = [
     url: "https://example1.com/rss",
     title: "Feed 1",
     siteUrl: "https://example1.com",
-    createdAt: new Date(),
-    updatedAt: new Date(),
     lastFetchedAt: null,
     etag: null,
     lastModified: null,
@@ -31,8 +29,6 @@ const fakeFeeds: Feed[] = [
     url: "https://example2.com/rss",
     title: "Feed 2",
     siteUrl: null, // htmlUrl が無い場合を想定
-    createdAt: new Date(),
-    updatedAt: new Date(),
     lastFetchedAt: null,
     etag: null,
     lastModified: null,

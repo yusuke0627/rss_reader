@@ -14,6 +14,7 @@ function createMockDeps() {
     listPublicEntriesBySlug: vi.fn(),
     listByFilter: vi.fn(),
     saveFetchedEntries: vi.fn(),
+    updateSummary: vi.fn(),
   };
 
   return { entryRepository };
@@ -35,6 +36,8 @@ const fakeEntry: Entry = {
   url: "https://example.com/1",
   content: "内容1",
   author: "著者1",
+  publishedAt: new Date("2026-01-01"),
+  summary: null,
   createdAt: new Date("2026-01-01"),
 };
 

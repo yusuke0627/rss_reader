@@ -40,6 +40,7 @@ function createMockDeps() {
     markAsUnread: vi.fn(),
     toggleBookmark: vi.fn(),
     listPublicEntriesBySlug: vi.fn(),
+    updateSummary: vi.fn(),
   };
 
   const rssFetcher: RssFetcher = {
