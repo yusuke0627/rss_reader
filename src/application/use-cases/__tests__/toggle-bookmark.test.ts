@@ -13,6 +13,7 @@ function createMockDeps() {
     listPublicEntriesBySlug: vi.fn(),
     listByFilter: vi.fn(),
     saveFetchedEntries: vi.fn(),
+    updateSummary: vi.fn(),
   };
 
   return { entryRepository };
@@ -36,6 +37,7 @@ const fakeEntry: Entry = {
   author: "著者1",
   createdAt: new Date("2026-01-01"),
   publishedAt: new Date("2026-01-01"),
+  summary: null,
 };
 
 describe("ToggleBookmark UseCase", () => {

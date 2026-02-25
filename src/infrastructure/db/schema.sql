@@ -53,6 +53,7 @@ CREATE TABLE IF NOT EXISTS entries (
   content TEXT,
   published_at TEXT,
   author TEXT,
+  summary TEXT,
   created_at TEXT NOT NULL,
   UNIQUE(feed_id, guid),
   FOREIGN KEY (feed_id) REFERENCES feeds(id) ON DELETE CASCADE

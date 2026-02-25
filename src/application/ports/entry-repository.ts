@@ -44,6 +44,7 @@ export interface EntryRepository {
     entryId: string;
     isBookmarked: boolean;
   }): Promise<UserEntry>;
+  updateSummary(input: { entryId: string; summary: string }): Promise<Entry>;
   listPublicEntriesBySlug(input: {
     slug: string;
     limit?: number;

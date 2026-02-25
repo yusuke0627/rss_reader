@@ -99,6 +99,7 @@ export class InMemoryEntryRepository implements EntryRepository {
         content: item.content ?? null,
         publishedAt: item.publishedAt ?? null,
         author: item.author ?? null,
+        summary: null,
         createdAt: new Date(),
       };
 
@@ -166,6 +167,21 @@ export class InMemoryEntryRepository implements EntryRepository {
         return bTime - aTime;
       })
       .slice(0, input.limit ?? 50);
+  }
+
+  async updateSummary(input: {
+    entryId: string;
+    summary: string;
+  }): Promise<Entry> {
+    const entry = inMemoryStore.entries.find(
+      (item) => item.id === input.entryId,
+    );
+    if (!entry) {
+      throw new Error(`Entry ${input.entryId} not found`);
+    }
+
+    entry.summary = input.summary;
+    return entry;
   }
 
   private upsertUserEntry(userId: string, entryId: string): UserEntry {

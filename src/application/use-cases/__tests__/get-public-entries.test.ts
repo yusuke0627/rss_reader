@@ -20,6 +20,7 @@ function createMockDeps() {
     markAsUnread: vi.fn(),
     toggleBookmark: vi.fn(),
     listPublicEntriesBySlug: vi.fn(),
+    updateSummary: vi.fn(),
   };
 
   return { userRepository, entryRepository };
@@ -29,8 +30,6 @@ const fakeProfile: PublicProfile = {
   userId: "user-1",
   publicSlug: "test-user",
   isPublic: true,
-  createdAt: new Date("2026-01-01"),
-  updatedAt: new Date("2026-02-01"),
 };
 
 const fakeEntries: Entry[] = [
@@ -42,6 +41,7 @@ const fakeEntries: Entry[] = [
     url: "https://example.com/1",
     content: "内容1",
     author: "著者1",
+    summary: null,
     createdAt: new Date("2026-01-01"),
     publishedAt: new Date("2026-01-01"),
   },

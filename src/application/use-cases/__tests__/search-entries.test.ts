@@ -12,6 +12,7 @@ function createMockDeps() {
     markAsUnread: vi.fn(),
     toggleBookmark: vi.fn(),
     listPublicEntriesBySlug: vi.fn(),
+    updateSummary: vi.fn(),
   };
 
   const searchRepository: SearchRepository = {
@@ -31,6 +32,7 @@ const fakeEntries: Entry[] = [
     url: "https://example.com/1",
     content: "検索キーワードを含む内容",
     author: "著者1",
+    summary: null,
     createdAt: new Date("2026-01-01"),
     publishedAt: new Date("2026-01-01"),
   },

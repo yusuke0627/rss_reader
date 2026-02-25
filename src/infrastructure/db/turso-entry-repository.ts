@@ -38,6 +38,7 @@ function mapEntry(row: Record<string, unknown>): Entry {
     content: asNullableString(row.content),
     publishedAt: asNullableDate(row.published_at),
     author: asNullableString(row.author),
+    summary: asNullableString(row.summary),
     createdAt: asDate(row.created_at),
   };
 }
@@ -95,7 +96,7 @@ export class TursoEntryRepository implements EntryRepository {
     const result = await db.execute({
       sql: `
         SELECT DISTINCT
-          e.id, e.feed_id, e.guid, e.title, e.url, e.content, e.published_at, e.author, e.created_at
+          e.id, e.feed_id, e.guid, e.title, e.url, e.content, e.published_at, e.author, e.summary, e.created_at
         FROM entries e
         INNER JOIN subscriptions s ON s.feed_id = e.feed_id
         LEFT JOIN user_entry ue ON ue.entry_id = e.id AND ue.user_id = s.user_id
@@ -116,7 +117,7 @@ export class TursoEntryRepository implements EntryRepository {
     const db = getTursoClient();
     const result = await db.execute({
       sql: `
-        SELECT e.id, e.feed_id, e.guid, e.title, e.url, e.content, e.published_at, e.author, e.created_at
+        SELECT e.id, e.feed_id, e.guid, e.title, e.url, e.content, e.published_at, e.author, e.summary, e.created_at
         FROM entries e
         INNER JOIN subscriptions s ON s.feed_id = e.feed_id
         WHERE s.user_id = ? AND e.id = ?
@@ -137,8 +138,8 @@ export class TursoEntryRepository implements EntryRepository {
       const id = crypto.randomUUID();
       const result = await db.execute({
         sql: `
-          INSERT INTO entries (id, feed_id, guid, title, url, content, published_at, author, created_at)
-          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+          INSERT INTO entries (id, feed_id, guid, title, url, content, published_at, author, summary, created_at)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, NULL, ?)
           ON CONFLICT(feed_id, guid) DO NOTHING
         `,
         args: [
@@ -227,7 +228,7 @@ export class TursoEntryRepository implements EntryRepository {
     const result = await db.execute({
       sql: `
         SELECT DISTINCT
-          e.id, e.feed_id, e.guid, e.title, e.url, e.content, e.published_at, e.author, e.created_at
+          e.id, e.feed_id, e.guid, e.title, e.url, e.content, e.published_at, e.author, e.summary, e.created_at
         FROM public_profile pp
         INNER JOIN subscriptions s ON s.user_id = pp.user_id
         INNER JOIN entries e ON e.feed_id = s.feed_id
@@ -239,6 +240,29 @@ export class TursoEntryRepository implements EntryRepository {
     });
 
     return result.rows.map((row) => mapEntry(row as Record<string, unknown>));
+  }
+
+  async updateSummary(input: {
+    entryId: string;
+    summary: string;
+  }): Promise<Entry> {
+    const db = getTursoClient();
+    await db.execute({
+      sql: `UPDATE entries SET summary = ? WHERE id = ?`,
+      args: [input.summary, input.entryId],
+    });
+
+    const result = await db.execute({
+      sql: `SELECT id, feed_id, guid, title, url, content, published_at, author, summary, created_at FROM entries WHERE id = ? LIMIT 1`,
+      args: [input.entryId],
+    });
+
+    const row = result.rows[0] as Record<string, unknown> | undefined;
+    if (!row) {
+      throw new Error(`Entry ${input.entryId} not found after update`);
+    }
+
+    return mapEntry(row);
   }
 
   private async findUserEntry(

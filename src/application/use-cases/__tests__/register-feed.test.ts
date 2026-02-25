@@ -51,8 +51,6 @@ const fakeFeed: Feed = {
   url: "https://example.com/rss",
   title: "Example Feed",
   siteUrl: "https://example.com",
-  createdAt: new Date(),
-  updatedAt: new Date(),
   lastFetchedAt: null,
   etag: "fake-etag",
   lastModified: "2026-02-22",
@@ -75,6 +73,7 @@ const fakeEntry: Entry = {
   content: "内容",
   author: "著者",
   publishedAt: new Date(),
+  summary: null,
   createdAt: new Date(),
 };
 
