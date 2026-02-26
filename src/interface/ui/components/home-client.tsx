@@ -4,6 +4,9 @@ import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import Link from "next/link";
 import { useFeedFormStore } from "@/interface/ui/stores/feed-form-store";
+import remarkGfm from "remark-gfm"
+import ReactMarkdown from "react-markdown";
+import { EntryItem } from "./entry-item";
 
 interface EntryItem {
   id: string;
@@ -249,48 +252,21 @@ export function HomeClient() {
           {!entriesQuery.isLoading && (entriesQuery.data?.entries.length ?? 0) === 0 ? (
             <li className="text-sm text-slate-600">No entries found.</li>
           ) : null}
-
           {entriesQuery.data?.entries.map((entry) => (
-            <li key={entry.id} className="rounded-md border border-slate-200 p-3">
-              <a href={entry.url} target="_blank" rel="noreferrer" className="font-medium text-slate-900 underline">
-                {entry.title}
-              </a>
-              <p className="mt-1 text-xs text-slate-500">
-                {entry.author ?? "Unknown author"}
-                {entry.publishedAt ? ` / ${new Date(entry.publishedAt).toLocaleString()}` : ""}
-              </p>
-
-              {/* 要約表示（UIキャッシュ or サーバ返却分） */}
-              {(summaries[entry.id] ?? entry.summary) ? (
-                <div className="mt-2 rounded bg-slate-50 p-2 text-sm text-slate-700">
-                  {(summaries[entry.id] ?? entry.summary) ?? ""}
-                </div>
-              ) : null}
-
-              <div className="mt-3 flex flex-wrap gap-2">
-                {(["read", "unread", "bookmark", "unbookmark"] as const).map((action) => (
-                  <button
-                    key={action}
-                    type="button"
-                    onClick={() => entryActionMutation.mutate({ entryId: entry.id, action })}
-                    disabled={entryActionMutation.isPending && activeEntryId === entry.id}
-                    className="rounded-md border border-slate-300 px-2 py-1 text-xs uppercase"
-                  >
-                    {action}
-                  </button>
-                ))}
-
-                {/* 要約ボタン */}
-                <button
-                  type="button"
-                  onClick={() => summarizeMutation.mutate(entry.id)}
-                  disabled={summarizeMutation.isPending && activeEntryId === entry.id}
-                  className="rounded-md border border-slate-300 px-2 py-1 text-xs"
-                >
-                  {summarizeMutation.isPending && activeEntryId === entry.id ? "Summarizing..." : "Summarize"}
-                </button>
-              </div>
-            </li>
+            <EntryItem
+              key={entry.id}
+              entry={entry}
+              summaries={summaries}
+              activeEntryId={activeEntryId}
+              onAction={(entryId, action) =>
+                entryActionMutation.mutate({ entryId, action })
+              }
+              onSummarize={(entryId) =>
+                summarizeMutation.mutate(entryId)
+              }
+              isActionPending={entryActionMutation.isPending}
+              isSummarizePending={summarizeMutation.isPending}
+            />
           ))}
         </ul>
       </div>
