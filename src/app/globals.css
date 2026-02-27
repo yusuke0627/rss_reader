@@ -1,13 +1,92 @@
 @import "tailwindcss";
 @plugin "@tailwindcss/typography";
 
+/* Material Design 3 (Material You) Theme - Dark/Tonal */
+@theme {
+  /* Brand accents mapped to M3 Primary/Secondary/Tertiary */
+  --color-m3-primary: #a8c7fa;
+  --color-m3-on-primary: #062e6f;
+  --color-m3-primary-container: #0842a0;
+  --color-m3-on-primary-container: #d3e3fd;
+
+  --color-m3-secondary: #c2c7cf;
+  --color-m3-on-secondary: #2b313a;
+  --color-m3-secondary-container: #414751;
+  --color-m3-on-secondary-container: #dee3eb;
+
+  --color-m3-tertiary: #c4c3ea;
+  --color-m3-on-tertiary: #2e2d4d;
+  --color-m3-tertiary-container: #444465;
+  --color-m3-on-tertiary-container: #e0dfff;
+
+  --color-m3-error: #ffb4ab;
+  --color-m3-on-error: #690005;
+  --color-m3-error-container: #93000a;
+  --color-m3-on-error-container: #ffdad6;
+
+  /* Surfaces */
+  --color-m3-surface: #111318;
+  --color-m3-surface-dim: #111318;
+  --color-m3-surface-bright: #37393e;
+  
+  --color-m3-surface-container-lowest: #0c0e13;
+  --color-m3-surface-container-low: #191c20;
+  --color-m3-surface-container: #1d2024;
+  --color-m3-surface-container-high: #282a2f;
+  --color-m3-surface-container-highest: #33353a;
+
+  --color-m3-on-surface: #e1e2e8;
+  --color-m3-on-surface-variant: #c4c6d0;
+  --color-m3-outline: #8e9099;
+  --color-m3-outline-variant: #44474e;
+}
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: var(--color-m3-surface);
+  --foreground: var(--color-m3-on-surface);
 }
 
 body {
-  background: var(--background);
+  background-color: var(--background);
   color: var(--foreground);
+  font-family: "Roboto", system-ui, sans-serif;
+  letter-spacing: 0.01em;
+}
+
+/* Scrollbar styling for M3 */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: var(--color-m3-outline-variant);
+  border-radius: 9999px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: var(--color-m3-outline);
+}
+
+/* Material State Layers (Hover/Focus/Ripples) */
+.m3-state-layer {
+  position: relative;
+  overflow: hidden;
+}
+.m3-state-layer::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background-color: currentColor;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  pointer-events: none;
+}
+.m3-state-layer:hover::after {
+  opacity: 0.08;
+}
+.m3-state-layer:active::after {
+  opacity: 0.12;
 }
