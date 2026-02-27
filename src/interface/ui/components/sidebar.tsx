@@ -40,14 +40,19 @@ export function Sidebar({ onAddFeed, isAdding, onClear }: SidebarProps) {
             Categories
           </h2>
           <div className="space-y-1">
-            {["Technology", "Design", "Business", "Science"].map((cat) => (
-              <button key={cat} className="w-full flex items-center justify-between px-3 py-2 rounded-lg hover:bg-white/5 transition-colors group">
+            {[
+              { name: "Technology", count: 24 },
+              { name: "Design", count: 8 },
+              { name: "Business", count: 15 },
+              { name: "Science", count: 42 }
+            ].map((cat) => (
+              <button key={cat.name} className="w-full flex items-center justify-between px-3 py-2 rounded-lg hover:bg-white/5 transition-colors group">
                 <div className="flex items-center gap-3">
                   <Folder size={16} className="text-slate-500 group-hover:text-indigo-400" />
-                  <span className="text-sm">{cat}</span>
+                  <span className="text-sm">{cat.name}</span>
                 </div>
                 <span className="text-[10px] bg-white/5 px-1.5 py-0.5 rounded text-slate-500">
-                  {Math.floor(Math.random() * 50)}
+                  {cat.count}
                 </span>
               </button>
             ))}
