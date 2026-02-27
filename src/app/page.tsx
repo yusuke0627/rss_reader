@@ -2,8 +2,7 @@ import { HomeClient } from "@/interface/ui/components/home-client";
 
 export default function Home() {
   return (
-    <main className="mx-auto flex min-h-screen max-w-4xl items-center justify-center p-8">
-      {/* 実操作の入り口は HomeClient に集約 */}
+    <main className="h-screen w-full overflow-hidden bg-m3-surface text-m3-on-surface">
       <HomeClient />
     </main>
   );
