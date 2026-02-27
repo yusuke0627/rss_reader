@@ -37,6 +37,16 @@ export function EntryList({
   onUnreadOnlyChange,
   onRefresh,
 }: EntryListProps) {
+  // Sanitize leftover entities from older DB entries before rendering
+  const cleanContent = (str: string | undefined | null) => {
+    if (!str) return "";
+    let decoded = str.replace(/<!\[CDATA\[([\s\S]*?)\]\]>/gi, "$1");
+    decoded = decoded.replace(/&#(\d+);/g, (_, dec) => String.fromCharCode(parseInt(dec, 10)));
+    decoded = decoded.replace(/&#x([0-9a-f]+);/gi, (_, hex) => String.fromCharCode(parseInt(hex, 16)));
+    decoded = decoded.replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&quot;/g, '"').replace(/&apos;/g, "'");
+    return decoded;
+  };
+
   return (
     <div className="flex flex-col h-full bg-m3-surface border-r border-m3-outline-variant">
       {/* Search Header */}
@@ -93,6 +103,9 @@ export function EntryList({
               ? formatDistanceToNow(new Date(entry.publishedAt), { addSuffix: true })
               : "";
 
+            const safeTitle = cleanContent(entry.title);
+            const safeAuthor = cleanContent(entry.author);
+
             return (
               <motion.div
                 initial={{ opacity: 0, y: 10 }}
@@ -106,11 +119,11 @@ export function EntryList({
                   }`}
               >
                 <h3 className={`text-base font-medium mb-1 line-clamp-2 leading-snug`}>
-                  {entry.title}
+                  {safeTitle}
                 </h3>
                 <div className="flex items-center justify-between mt-2">
                   <span className={`text-xs line-clamp-1 ${isActive ? "text-m3-on-secondary-container/80" : "text-m3-on-surface-variant"}`}>
-                    {entry.author || "Unknown"} • {dateStr}
+                    {safeAuthor || "Unknown"} • {dateStr}
                   </span>
                   {entry.summary && (
                     <div className="min-w-2 w-2 h-2 ml-2 rounded-full bg-m3-primary" title="AI Summary Available" />

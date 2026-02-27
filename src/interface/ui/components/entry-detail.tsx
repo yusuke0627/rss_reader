@@ -53,17 +53,20 @@ export function EntryDetail({
     ? format(new Date(entry.publishedAt), "MMMM d, yyyy • h:mm a")
     : "Unknown date";
 
-  // Sanitize existing CDATA or leftover entities from older DB entries BEFORE rendering.
   const cleanContent = (str: string | undefined | null) => {
     if (!str) return "";
     let decoded = str.replace(/<!\[CDATA\[([\s\S]*?)\]\]>/gi, "$1");
     // Decode numeric references
     decoded = decoded.replace(/&#(\d+);/g, (_, dec) => String.fromCharCode(parseInt(dec, 10)));
     decoded = decoded.replace(/&#x([0-9a-f]+);/gi, (_, hex) => String.fromCharCode(parseInt(hex, 16)));
+    decoded = decoded.replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&quot;/g, '"').replace(/&apos;/g, "'");
     return decoded;
   };
 
   const safeContent = cleanContent(entry.content);
+  const safeUrl = cleanContent(entry.url);
+  const safeTitle = cleanContent(entry.title);
+  const safeAuthor = cleanContent(entry.author) || "Unknown Author";
 
   return (
     <div className="flex-1 h-full overflow-y-auto custom-scrollbar bg-m3-surface relative">
@@ -77,10 +80,10 @@ export function EntryDetail({
           {/* Header */}
           <div className="mb-10">
             <h1 className="text-4xl font-normal text-m3-on-surface leading-[1.15] mb-6 tracking-tight">
-              {entry.title}
+              {safeTitle}
             </h1>
             <div className="flex items-center gap-3 text-sm font-medium text-m3-on-surface-variant">
-              <span className="text-m3-primary">{entry.author || "Unknown Author"}</span>
+              <span className="text-m3-primary">{safeAuthor}</span>
               <span>•</span>
               <span>{dateFormated}</span>
             </div>
@@ -98,7 +101,7 @@ export function EntryDetail({
           {/* Action Bar (Material Tonal/Text Buttons) */}
           <div className="flex flex-wrap items-center gap-4 mb-12 py-4 border-y border-m3-outline-variant/50">
             <a
-              href={entry.url}
+              href={safeUrl}
               target="_blank"
               rel="noreferrer"
               className="inline-flex items-center gap-2 px-6 py-2.5 rounded-full bg-m3-primary text-m3-on-primary text-sm font-medium m3-state-layer shadow-sm"
