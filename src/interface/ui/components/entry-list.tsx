@@ -10,6 +10,7 @@ export interface EntryItemType {
   url: string;
   author: string | null;
   publishedAt: string | null;
+  content?: string | null;
   summary?: string | null;
 }
 
@@ -99,8 +100,8 @@ export function EntryList({
                 key={entry.id}
                 onClick={() => onSelectEntry(entry)}
                 className={`p-4 rounded-xl cursor-pointer transition-all border ${isActive
-                    ? "bg-indigo-500/10 border-indigo-500/30 shadow-lg shadow-indigo-500/5"
-                    : "bg-white/[0.02] border-white/5 hover:bg-white/[0.04] hover:border-white/10"
+                  ? "bg-indigo-500/10 border-indigo-500/30 shadow-lg shadow-indigo-500/5"
+                  : "bg-white/[0.02] border-white/5 hover:bg-white/[0.04] hover:border-white/10"
                   }`}
               >
                 <h3 className={`text-sm font-semibold mb-2 line-clamp-2 leading-relaxed ${isActive ? "text-indigo-300" : "text-slate-200"}`}>

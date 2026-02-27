@@ -74,6 +74,15 @@ export function EntryDetail({
             </div>
           </div>
 
+          {/* Content / Description */}
+          {entry.content && (
+            <div className="mb-10 prose prose-invert prose-indigo max-w-none prose-p:leading-relaxed prose-p:text-slate-300 prose-a:text-indigo-400 hover:prose-a:text-indigo-300">
+              <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                {entry.content}
+              </ReactMarkdown>
+            </div>
+          )}
+
           {/* Action Bar */}
           <div className="flex items-center gap-3 mb-10 pb-6 border-b border-white/10">
             <a
