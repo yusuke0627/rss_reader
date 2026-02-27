@@ -34,13 +34,18 @@ function extractLink(block: string): string | null {
 }
 
 function decodeXml(value: string): string {
-  return value
+  let decoded = value
     .replaceAll("&amp;", "&")
     .replaceAll("&lt;", "<")
     .replaceAll("&gt;", ">")
     .replaceAll("&quot;", '"')
-    .replaceAll("&#39;", "'")
-    .trim();
+    .replaceAll("&#39;", "'");
+  
+  // Decode numeric references like &#45; (hyphen)
+  decoded = decoded.replace(/&#(\d+);/g, (_, dec) => String.fromCharCode(parseInt(dec, 10)));
+  decoded = decoded.replace(/&#x([0-9a-f]+);/gi, (_, hex) => String.fromCharCode(parseInt(hex, 16)));
+  
+  return decoded.trim();
 }
 
 function parseDate(value: string | null): Date | null {
