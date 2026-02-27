@@ -2,23 +2,13 @@
 
 import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import Link from "next/link";
 import { useFeedFormStore } from "@/interface/ui/stores/feed-form-store";
-import remarkGfm from "remark-gfm"
-import ReactMarkdown from "react-markdown";
-import { EntryItem } from "./entry-item";
-
-interface EntryItem {
-  id: string;
-  title: string;
-  url: string;
-  author: string | null;
-  publishedAt: string | null;
-  summary?: string | null;
-}
+import { Sidebar } from "./sidebar";
+import { EntryList, type EntryItemType } from "./entry-list";
+import { EntryDetail } from "./entry-detail";
 
 interface EntriesResponse {
-  entries: EntryItem[];
+  entries: EntryItemType[];
 }
 
 class UnauthorizedApiError extends Error {
@@ -90,19 +80,17 @@ async function postSummarize(entryId: string) {
     const body = (await response.json().catch(() => ({}))) as { error?: string };
     throw new Error(body.error ?? `Failed to summarize`);
   }
-  return response.json() as Promise<EntryItem>;
+  return response.json() as Promise<EntryItemType>;
 }
 
 export function HomeClient() {
   const queryClient = useQueryClient();
-  const { draftUrl, setDraftUrl, clear } = useFeedFormStore();
+  const { clear } = useFeedFormStore();
 
-  // UIローカル状態（検索条件や操作中のentry）は React state で管理。
   const [search, setSearch] = useState("");
   const [unreadOnly, setUnreadOnly] = useState(false);
-  const [activeEntryId, setActiveEntryId] = useState<string | null>(null);
+  const [activeEntry, setActiveEntry] = useState<EntryItemType | null>(null);
 
-  // Server state は TanStack Query で管理する。
   const entriesQuery = useQuery({
     queryKey: ["entries", { unreadOnly, search }],
     queryFn: () => fetchEntries({ unreadOnly, search }),
@@ -113,7 +101,6 @@ export function HomeClient() {
     onSuccess: async () => {
       clearErrorMessages();
       clear();
-      // Feed追加後は一覧を再取得して表示を同期する。
       await queryClient.invalidateQueries({ queryKey: ["entries"] });
     },
   });
@@ -123,27 +110,20 @@ export function HomeClient() {
       entryId: string;
       action: "read" | "unread" | "bookmark" | "unbookmark";
     }) => {
-      setActiveEntryId(input.entryId);
       await postEntryAction(input.entryId, input.action);
     },
     onSuccess: async () => {
       clearErrorMessages();
-      // read/bookmark 操作後も一覧を再取得する。
       await queryClient.invalidateQueries({ queryKey: ["entries"] });
-    },
-    onSettled: () => {
-      setActiveEntryId(null);
     },
   });
 
   const summarizeMutation = useMutation({
     mutationFn: async (entryId: string) => {
-      setActiveEntryId(entryId);
       return await postSummarize(entryId);
     },
     onSuccess: async (newEntry) => {
       clearErrorMessages();
-      // TanStack Query のキャッシュを直接更新して、即座にUIに反映させる
       queryClient.setQueryData(["entries", { unreadOnly, search }], (old: any) => {
         if (!old) return old;
         return {
@@ -153,15 +133,14 @@ export function HomeClient() {
           ),
         };
       });
-      // サーバー側の最新状態とも同期を取る
+      // Update active entry state to reflect summary immediately
+      if (activeEntry?.id === newEntry.id) {
+        setActiveEntry(newEntry);
+      }
       await queryClient.invalidateQueries({ queryKey: ["entries"] });
-    },
-    onSettled: () => {
-      setActiveEntryId(null);
     },
   });
 
-  // エラーメッセージをクリアする(エラー表示->ほか操作時に消えるようにするための処置)
   const clearErrorMessages = () => {
     createFeedMutation.reset();
     entryActionMutation.reset();
@@ -184,123 +163,66 @@ export function HomeClient() {
     }
     return null;
   }, [createFeedMutation.error, entriesQuery.error, entryActionMutation.error, summarizeMutation.error]);
-  // debug
-  // const errorMessage = "Api Rate limit";
-  const Spinner = () => (
-    <svg className="animate-spin -ml-1 mr-2 h-3 w-3 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-    </svg>
-  );
+
+
+  // Find actual updated entry from query data if exists
+  const currentEntry = useMemo(() => {
+    if (!activeEntry) return null;
+    return entriesQuery.data?.entries.find(e => e.id === activeEntry.id) || activeEntry;
+  }, [activeEntry, entriesQuery.data]);
 
   return (
-    <section className="w-full space-y-6 rounded-xl border border-slate-200 bg-white p-8 shadow-sm">
-      <header>
-        <h1 className="text-2xl font-semibold text-slate-900">RSS Reader</h1>
-        <p className="mt-2 text-sm text-slate-600">Minimal verification UI for feeds and entries.</p>
-      </header>
+    <div className="flex h-screen w-full bg-[#0f172a] overflow-hidden text-slate-200">
 
-      <div className="rounded-lg border border-slate-200 p-4">
-        <h2 className="text-sm font-semibold text-slate-900">1) Register Feed</h2>
-        <div className="mt-3 flex gap-2">
-          <input
-            value={draftUrl}
-            onChange={(e) => setDraftUrl(e.target.value)}
-            placeholder="https://example.com/feed.xml"
-            className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
-          />
-          <button
-            type="button"
-            onClick={() => createFeedMutation.mutate(draftUrl)}
-            disabled={!draftUrl.trim() || createFeedMutation.isPending}
-            className="inline-flex items-center rounded-md bg-slate-900 px-3 py-2 text-sm text-white disabled:opacity-60"
-          >
-            {createFeedMutation.isPending ? (
-              <>
-                <Spinner />
-                Adding...
-              </>
-            ) : (
-              "Add"
-            )}
-          </button>
-          <button
-            type="button"
-            onClick={clear}
-            className="rounded-md border border-slate-300 px-3 py-2 text-sm"
-          >
-            Clear
-          </button>
-        </div>
-      </div>
+      {/* 1. Left Sidebar Pane */}
+      <Sidebar
+        onAddFeed={(url) => createFeedMutation.mutate(url)}
+        isAdding={createFeedMutation.isPending}
+        onClear={clear}
+      />
 
-      <div className="rounded-lg border border-slate-200 p-4">
-        <h2 className="text-sm font-semibold text-slate-900">2) Entries</h2>
-        <div className="mt-3 flex flex-wrap items-center gap-3">
-          <input
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="search title/content"
-            className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm sm:w-80"
-          />
-          <label className="inline-flex items-center gap-2 text-sm text-slate-700">
-            <input
-              type="checkbox"
-              checked={unreadOnly}
-              onChange={(e) => setUnreadOnly(e.target.checked)}
-            />
-            unread only
-          </label>
-          <button
-            type="button"
-            onClick={() => entriesQuery.refetch()}
-            className="rounded-md border border-slate-300 px-3 py-2 text-sm"
-          >
-            Refresh
-          </button>
-        </div>
-
-        {unauthorized ? (
-          <div className="mt-4 rounded-md border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">
-            Sign in is required. Open{" "}
-            <Link className="underline" href="/api/auth/signin">
-              /api/auth/signin
-            </Link>
-            .
-          </div>
-        ) : null}
-
-        {errorMessage ? (
-          <div className={`mt-4 rounded-md border p-4 text-sm ${errorMessage.includes("Api Rate limit") ? "border-amber-200 bg-amber-50 text-amber-800" : "border-red-200 bg-red-50 text-red-800"}`}>
+      {/* 2. Middle List Pane */}
+      <div className="w-[400px] shrink-0 h-full flex flex-col z-10 shadow-2xl shadow-black/50">
+        {errorMessage && (
+          <div className="bg-red-500/10 border-l-4 border-red-500 text-red-400 p-4 text-sm m-4 rounded-r-md">
             {errorMessage}
           </div>
-        ) : null}
-
-        <ul className="mt-4 space-y-2">
-          {entriesQuery.isLoading ? (
-            <li className="text-sm text-slate-600">Loading entries...</li>
-          ) : null}
-
-          {!entriesQuery.isLoading && (entriesQuery.data?.entries.length ?? 0) === 0 ? (
-            <li className="text-sm text-slate-600">No entries found.</li>
-          ) : null}
-          {entriesQuery.data?.entries.map((entry) => (
-            <EntryItem
-              key={entry.id}
-              entry={entry}
-              activeEntryId={activeEntryId}
-              onAction={(entryId, action) =>
-                entryActionMutation.mutate({ entryId, action })
-              }
-              onSummarize={(entryId) =>
-                summarizeMutation.mutate(entryId)
-              }
-              isActionPending={entryActionMutation.isPending}
-              isSummarizePending={summarizeMutation.isPending}
-            />
-          ))}
-        </ul>
+        )}
+        {unauthorized && (
+          <div className="bg-amber-500/10 border-l-4 border-amber-500 text-amber-400 p-4 text-sm m-4 rounded-r-md flex flex-col gap-2">
+            <span>Authentication required.</span>
+            <a
+              href="/api/auth/signin"
+              className="inline-flex w-max items-center font-medium text-amber-300 hover:text-amber-200 underline underline-offset-2 transition-colors"
+            >
+              Go to Sign In →
+            </a>
+          </div>
+        )}
+        <EntryList
+          entries={entriesQuery.data?.entries ?? []}
+          isLoading={entriesQuery.isLoading}
+          activeEntryId={activeEntry?.id ?? null}
+          onSelectEntry={setActiveEntry}
+          search={search}
+          onSearchChange={setSearch}
+          unreadOnly={unreadOnly}
+          onUnreadOnlyChange={setUnreadOnly}
+          onRefresh={() => entriesQuery.refetch()}
+        />
       </div>
-    </section>
+
+      {/* 3. Right Detail Pane */}
+      <div className="flex-1 h-full z-0 relative">
+        <EntryDetail
+          entry={currentEntry}
+          onSummarize={(id) => summarizeMutation.mutate(id)}
+          isSummarizePending={summarizeMutation.isPending}
+          onAction={(id, action) => entryActionMutation.mutate({ entryId: id, action })}
+          isActionPending={entryActionMutation.isPending}
+        />
+      </div>
+
+    </div>
   );
 }
