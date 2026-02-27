@@ -3,6 +3,7 @@
 import { motion } from "framer-motion";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import rehypeRaw from "rehype-raw";
 import { Sparkles, Loader2, ExternalLink, Bookmark, CheckCircle2, Circle } from "lucide-react";
 import type { EntryItemType } from "./entry-list";
 import { format } from "date-fns";
@@ -89,7 +90,7 @@ export function EntryDetail({
           {/* Content / Description */}
           {safeContent && (
             <div className="mb-10 prose prose-invert prose-indigo max-w-none prose-p:leading-relaxed prose-p:text-slate-300 prose-a:text-indigo-400 hover:prose-a:text-indigo-300">
-              <ReactMarkdown remarkPlugins={[remarkGfm]}>
+              <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeRaw]}>
                 {safeContent}
               </ReactMarkdown>
             </div>
@@ -160,7 +161,7 @@ export function EntryDetail({
                 </div>
 
                 <div className="prose prose-invert prose-indigo max-w-none mt-4 prose-p:leading-relaxed prose-p:text-slate-300 prose-headings:text-slate-100 prose-strong:text-indigo-300 prose-li:text-slate-300">
-                  <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                  <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeRaw]}>
                     {entry.summary}
                   </ReactMarkdown>
                 </div>
