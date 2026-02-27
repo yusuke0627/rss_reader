@@ -83,6 +83,9 @@ async function postSummarize(entryId: string) {
   if (response.status === 401) {
     throw new UnauthorizedApiError();
   }
+  if (response.status === 429) {
+    throw new Error("Api Rate limit exceeded. Please try again later.");
+  }
   if (!response.ok) {
     const body = (await response.json().catch(() => ({}))) as { error?: string };
     throw new Error(body.error ?? `Failed to summarize`);
@@ -99,10 +102,6 @@ export function HomeClient() {
   const [unreadOnly, setUnreadOnly] = useState(false);
   const [activeEntryId, setActiveEntryId] = useState<string | null>(null);
 
-  // summaries キャッシュ: entryId -> summaryText|null
-  // これは UI 側の即時表示用キャッシュ。サーバの entry.summary と併用します。
-  const [summaries, setSummaries] = useState<Record<string, string | null>>({});
-
   // Server state は TanStack Query で管理する。
   const entriesQuery = useQuery({
     queryKey: ["entries", { unreadOnly, search }],
@@ -112,6 +111,7 @@ export function HomeClient() {
   const createFeedMutation = useMutation({
     mutationFn: createFeed,
     onSuccess: async () => {
+      clearErrorMessages();
       clear();
       // Feed追加後は一覧を再取得して表示を同期する。
       await queryClient.invalidateQueries({ queryKey: ["entries"] });
@@ -127,6 +127,7 @@ export function HomeClient() {
       await postEntryAction(input.entryId, input.action);
     },
     onSuccess: async () => {
+      clearErrorMessages();
       // read/bookmark 操作後も一覧を再取得する。
       await queryClient.invalidateQueries({ queryKey: ["entries"] });
     },
@@ -140,18 +141,32 @@ export function HomeClient() {
       setActiveEntryId(entryId);
       return await postSummarize(entryId);
     },
-    onSuccess: async (entry) => {
-      // サーバが更新済みの Entry を返す想定（summary を含む）
-      if (entry && entry.id) {
-        setSummaries((s) => ({ ...s, [entry.id]: entry.summary ?? null }));
-      }
-      // 一覧に summary が反映される可能性があるので再取得
+    onSuccess: async (newEntry) => {
+      clearErrorMessages();
+      // TanStack Query のキャッシュを直接更新して、即座にUIに反映させる
+      queryClient.setQueryData(["entries", { unreadOnly, search }], (old: any) => {
+        if (!old) return old;
+        return {
+          ...old,
+          entries: old.entries.map((e: any) =>
+            e.id === newEntry.id ? { ...e, summary: newEntry.summary } : e
+          ),
+        };
+      });
+      // サーバー側の最新状態とも同期を取る
       await queryClient.invalidateQueries({ queryKey: ["entries"] });
     },
     onSettled: () => {
       setActiveEntryId(null);
     },
   });
+
+  // エラーメッセージをクリアする(エラー表示->ほか操作時に消えるようにするための処置)
+  const clearErrorMessages = () => {
+    createFeedMutation.reset();
+    entryActionMutation.reset();
+    summarizeMutation.reset();
+  }
 
   const unauthorized = entriesQuery.error instanceof UnauthorizedApiError;
   const errorMessage = useMemo(() => {
@@ -169,6 +184,14 @@ export function HomeClient() {
     }
     return null;
   }, [createFeedMutation.error, entriesQuery.error, entryActionMutation.error, summarizeMutation.error]);
+  // debug
+  // const errorMessage = "Api Rate limit";
+  const Spinner = () => (
+    <svg className="animate-spin -ml-1 mr-2 h-3 w-3 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+    </svg>
+  );
 
   return (
     <section className="w-full space-y-6 rounded-xl border border-slate-200 bg-white p-8 shadow-sm">
@@ -190,9 +213,16 @@ export function HomeClient() {
             type="button"
             onClick={() => createFeedMutation.mutate(draftUrl)}
             disabled={!draftUrl.trim() || createFeedMutation.isPending}
-            className="rounded-md bg-slate-900 px-3 py-2 text-sm text-white disabled:opacity-60"
+            className="inline-flex items-center rounded-md bg-slate-900 px-3 py-2 text-sm text-white disabled:opacity-60"
           >
-            {createFeedMutation.isPending ? "Adding..." : "Add"}
+            {createFeedMutation.isPending ? (
+              <>
+                <Spinner />
+                Adding...
+              </>
+            ) : (
+              "Add"
+            )}
           </button>
           <button
             type="button"
@@ -241,7 +271,9 @@ export function HomeClient() {
         ) : null}
 
         {errorMessage ? (
-          <p className="mt-4 text-sm text-red-700">{errorMessage}</p>
+          <div className={`mt-4 rounded-md border p-4 text-sm ${errorMessage.includes("Api Rate limit") ? "border-amber-200 bg-amber-50 text-amber-800" : "border-red-200 bg-red-50 text-red-800"}`}>
+            {errorMessage}
+          </div>
         ) : null}
 
         <ul className="mt-4 space-y-2">
@@ -256,7 +288,6 @@ export function HomeClient() {
             <EntryItem
               key={entry.id}
               entry={entry}
-              summaries={summaries}
               activeEntryId={activeEntryId}
               onAction={(entryId, action) =>
                 entryActionMutation.mutate({ entryId, action })
