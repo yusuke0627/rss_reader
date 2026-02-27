@@ -53,6 +53,18 @@ export function EntryDetail({
     ? format(new Date(entry.publishedAt), "MMMM d, yyyy • h:mm a")
     : "Unknown date";
 
+  // Sanitize existing CDATA or leftover entities from older DB entries BEFORE rendering.
+  const cleanContent = (str: string | undefined | null) => {
+    if (!str) return "";
+    let decoded = str.replace(/<!\[CDATA\[([\s\S]*?)\]\]>/gi, "$1");
+    // Decode numeric references like &#45;
+    decoded = decoded.replace(/&#(\d+);/g, (_, dec) => String.fromCharCode(parseInt(dec, 10)));
+    decoded = decoded.replace(/&#x([0-9a-f]+);/gi, (_, hex) => String.fromCharCode(parseInt(hex, 16)));
+    return decoded;
+  };
+
+  const safeContent = cleanContent(entry.content);
+
   return (
     <div className="flex-1 h-full overflow-y-auto custom-scrollbar bg-slate-900/30 relative">
       <div className="max-w-3xl mx-auto p-10 pb-32">
@@ -75,10 +87,10 @@ export function EntryDetail({
           </div>
 
           {/* Content / Description */}
-          {entry.content && (
+          {safeContent && (
             <div className="mb-10 prose prose-invert prose-indigo max-w-none prose-p:leading-relaxed prose-p:text-slate-300 prose-a:text-indigo-400 hover:prose-a:text-indigo-300">
               <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                {entry.content}
+                {safeContent}
               </ReactMarkdown>
             </div>
           )}

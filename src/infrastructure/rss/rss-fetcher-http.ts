@@ -35,7 +35,11 @@ function extractLink(block: string): string | null {
 
 function decodeXml(value: string): string {
   if (!value) return "";
-  return value
+  
+  // CDATAタグを除去
+  let decoded = value.replace(/<!\[CDATA\[([\s\S]*?)\]\]>/gi, "$1");
+
+  return decoded
     .replace(/&amp;/g, "&")
     .replace(/&lt;/g, "<")
     .replace(/&gt;/g, ">")
