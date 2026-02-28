@@ -31,6 +31,7 @@ function mapEntry(row: Record<string, unknown>): Entry {
     publishedAt: asNullableDate(row.published_at),
     author: asNullableString(row.author),
     summary: asNullableString(row.summary),
+    imageUrl: asNullableString(row.image_url),
     createdAt: asDate(row.created_at),
   };
 }
@@ -74,7 +75,7 @@ export class TursoSearchRepository implements SearchRepository {
     const result = await db.execute({
       sql: `
         SELECT DISTINCT
-          e.id, e.feed_id, e.guid, e.title, e.url, e.content, e.published_at, e.author, e.summary, e.created_at
+          e.id, e.feed_id, e.guid, e.title, e.url, e.content, e.published_at, e.author, e.summary, e.image_url, e.created_at
         FROM entries_fts fts
         INNER JOIN entries e ON e.id = fts.entry_id
         INNER JOIN subscriptions s ON s.feed_id = e.feed_id

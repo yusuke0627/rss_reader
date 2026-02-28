@@ -2,7 +2,7 @@
 
 import { motion } from "framer-motion";
 import { formatDistanceToNow } from "date-fns";
-import { Search, Loader2, FileText, CheckCircle2 } from "lucide-react";
+import { Search, Loader2, FileText, CheckCircle2, RefreshCw } from "lucide-react";
 
 export interface EntryItemType {
   id: string;
@@ -12,6 +12,7 @@ export interface EntryItemType {
   publishedAt: string | null;
   content?: string | null;
   summary?: string | null;
+  imageUrl?: string | null;
 }
 
 interface EntryListProps {
@@ -55,8 +56,10 @@ export function EntryList({
           <h2 className="text-xl font-medium tracking-tight text-m3-on-surface">Inbox</h2>
           <button
             onClick={onRefresh}
-            className="text-sm font-medium px-4 py-2 rounded-full m3-state-layer text-m3-primary hover:bg-m3-primary/10 transition-colors"
+            disabled={isLoading}
+            className="text-sm font-medium px-4 py-2 rounded-full m3-state-layer text-m3-primary hover:bg-m3-primary/10 transition-colors flex items-center gap-2 disabled:opacity-50"
           >
+            <RefreshCw size={16} className={isLoading ? "animate-spin" : ""} />
             Refresh
           </button>
         </div>
@@ -118,15 +121,31 @@ export function EntryList({
                   : "hover:bg-m3-surface-container-high text-m3-on-surface"
                   }`}
               >
-                <h3 className={`text-base font-medium mb-1 line-clamp-2 leading-snug`}>
-                  {safeTitle}
-                </h3>
-                <div className="flex items-center justify-between mt-2">
-                  <span className={`text-xs line-clamp-1 ${isActive ? "text-m3-on-secondary-container/80" : "text-m3-on-surface-variant"}`}>
-                    {safeAuthor || "Unknown"} • {dateStr}
-                  </span>
-                  {entry.summary && (
-                    <div className="min-w-2 w-2 h-2 ml-2 rounded-full bg-m3-primary" title="AI Summary Available" />
+                <div className="flex gap-4">
+                  <div className="flex-1 min-w-0">
+                    <h3 className={`text-base font-medium mb-1 line-clamp-2 leading-snug`}>
+                      {safeTitle}
+                    </h3>
+                    <div className="flex items-center justify-between mt-2">
+                      <span className={`text-xs line-clamp-1 ${isActive ? "text-m3-on-secondary-container/80" : "text-m3-on-surface-variant"}`}>
+                        {safeAuthor || "Unknown"} • {dateStr}
+                      </span>
+                      {entry.summary && (
+                        <span className="text-[10px] font-bold bg-m3-primary text-m3-on-primary px-1.5 py-0.5 rounded-md leading-none shadow-sm ml-2">
+                          AI
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                  {entry.imageUrl && (
+                    <div className="flex-shrink-0">
+                      <img
+                        src={entry.imageUrl}
+                        alt=""
+                        className="w-20 h-20 object-cover rounded-xl bg-m3-surface-container-highest shadow-sm"
+                        onError={(e) => (e.currentTarget.style.display = "none")}
+                      />
+                    </div>
                   )}
                 </div>
               </motion.div>

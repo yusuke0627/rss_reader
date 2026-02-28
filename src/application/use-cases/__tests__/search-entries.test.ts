@@ -33,6 +33,7 @@ const fakeEntries: Entry[] = [
     content: "検索キーワードを含む内容",
     author: "著者1",
     summary: null,
+    imageUrl: null,
     createdAt: new Date("2026-01-01"),
     publishedAt: new Date("2026-01-01"),
   },

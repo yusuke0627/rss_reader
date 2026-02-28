@@ -23,6 +23,7 @@ export interface SaveFetchedEntriesInput {
     content?: string | null;
     publishedAt?: Date | null;
     author?: string | null;
+    imageUrl?: string | null;
   }>;
 }
 
