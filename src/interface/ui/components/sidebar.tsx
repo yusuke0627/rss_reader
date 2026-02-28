@@ -39,9 +39,9 @@ export function Sidebar({ onAddFeed, isAdding, onClear }: SidebarProps) {
               <button
                 onClick={() => onAddFeed(draftUrl)}
                 disabled={!draftUrl.trim() || isAdding}
-                className="flex-1 m3-state-layer rounded-full bg-m3-primary text-m3-on-primary text-sm font-medium py-2.5 flex items-center justify-center gap-2 shadow-sm disabled:opacity-50 disabled:bg-m3-secondary-container disabled:text-m3-on-secondary-container"
+                className="flex-1 m3-state-layer rounded-full bg-m3-primary text-m3-on-primary text-sm font-medium py-2.5 flex items-center justify-center gap-2 shadow-sm disabled:bg-m3-surface-container-highest disabled:text-m3-on-surface-variant"
               >
-                {isAdding ? <Loader2 size={16} className="animate-spin" /> : <><Plus size={16} /> Add</>}
+                {isAdding ? <Loader2 size={16} className="animate-spin" /> : <><Plus size={16} /> Add Feed</>}
               </button>
               <button
                 onClick={onClear}
