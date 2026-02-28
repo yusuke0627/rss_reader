@@ -136,6 +136,7 @@ export class RssFetcherHttp implements RssFetcher {
           ]),
         ),
         author: pickFirstTagValue(block, ["author", "dc:creator"]),
+        imageUrl: extractImage(block, pickFirstTagValue(block, ["content:encoded", "content", "description", "summary"])),
       };
     });
 
@@ -148,4 +149,40 @@ export class RssFetcherHttp implements RssFetcher {
       notModified: false,
     };
   }
+}
+
+function extractImage(block: string, content: string | null): string | null {
+  // 1. media:content
+  const mediaMatch = block.match(/<media:content[^>]+url=["']([^"']+)["']/i);
+  if (mediaMatch) return mediaMatch[1];
+
+  // 2. enclosure
+  const enclosureMatch = block.match(/<enclosure[^>]+url=["']([^"']+)["'][^>]*\/?>/i);
+  if (enclosureMatch) {
+    const tag = enclosureMatch[0];
+    const urlAttrMatch = tag.match(/url=["']([^"']+)["']/i);
+    const typeAttrMatch = tag.match(/type=["']([^"']+)["']/i);
+
+    if (urlAttrMatch) {
+      const url = urlAttrMatch[1];
+      const type = typeAttrMatch ? typeAttrMatch[1] : "";
+
+      // Allow if type is image/*, or if it's "false" (Lifehacker), or if URL looks like an image
+      if (
+        type.startsWith("image/") || 
+        type === "false" || 
+        url.match(/\.(jpg|jpeg|png|gif|webp|svg|avif)(?:\?.*)?$/i)
+      ) {
+        return url;
+      }
+    }
+  }
+
+  // 3. img tag in content/description
+  if (content) {
+    const imgMatch = content.match(/<img[^>]+src=["']([^"']+)["']/i);
+    if (imgMatch) return imgMatch[1];
+  }
+
+  return null;
 }

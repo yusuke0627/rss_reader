@@ -38,6 +38,7 @@ const fakeEntry: Entry = {
   author: "著者1",
   publishedAt: new Date("2026-01-01"),
   summary: null,
+  imageUrl: null,
   createdAt: new Date("2026-01-01"),
 };
 

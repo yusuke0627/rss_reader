@@ -16,6 +16,7 @@ export interface FetchedFeed {
     content?: string | null;
     publishedAt?: Date | null;
     author?: string | null;
+    imageUrl?: string | null;
   }>;
   notModified: boolean;
 }

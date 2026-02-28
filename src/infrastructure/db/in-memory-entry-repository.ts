@@ -100,6 +100,7 @@ export class InMemoryEntryRepository implements EntryRepository {
         publishedAt: item.publishedAt ?? null,
         author: item.author ?? null,
         summary: null,
+        imageUrl: item.imageUrl ?? null,
         createdAt: new Date(),
       };
 

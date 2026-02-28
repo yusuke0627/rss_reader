@@ -8,5 +8,6 @@ export interface Entry {
   publishedAt: Date | null;
   author: string | null;
   summary: string | null;
+  imageUrl: string | null;
   createdAt: Date;
 }

@@ -38,6 +38,7 @@ const fakeEntry: Entry = {
   createdAt: new Date("2026-01-01"),
   publishedAt: new Date("2026-01-01"),
   summary: null,
+  imageUrl: null,
 };
 
 describe("ToggleBookmark UseCase", () => {

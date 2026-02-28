@@ -28,6 +28,7 @@ const fakeEntry = {
   author: "author-1",
   createdAt: new Date(),
   summary: null,
+  imageUrl: null,
 };
 
 describe("GetEntriesByTag useCase", () => {
