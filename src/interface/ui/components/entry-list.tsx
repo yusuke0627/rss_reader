@@ -13,6 +13,8 @@ export interface EntryItemType {
   content?: string | null;
   summary?: string | null;
   imageUrl?: string | null;
+  isRead?: boolean;
+  isBookmarked?: boolean;
 }
 
 interface EntryListProps {

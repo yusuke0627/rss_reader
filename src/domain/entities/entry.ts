@@ -10,4 +10,6 @@ export interface Entry {
   summary: string | null;
   imageUrl: string | null;
   createdAt: Date;
+  isRead?: boolean;
+  isBookmarked?: boolean;
 }

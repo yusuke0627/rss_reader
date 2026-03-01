@@ -33,6 +33,14 @@ export class InMemoryEntryRepository implements EntryRepository {
         if (!filter.bookmarkedOnly) return true;
         return Boolean(userEntriesById.get(entry.id)?.isBookmarked);
       })
+      .map((entry) => {
+        const state = userEntriesById.get(entry.id);
+        return {
+          ...entry,
+          isRead: state?.isRead ?? false,
+          isBookmarked: state?.isBookmarked ?? false,
+        };
+      })
       .filter((entry) => {
         if (!filter.search) return true;
         const q = filter.search.toLowerCase();
