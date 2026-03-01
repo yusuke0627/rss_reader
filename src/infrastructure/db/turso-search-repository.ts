@@ -20,6 +20,10 @@ function asNullableDate(value: unknown): Date | null {
   return new Date(asString(value));
 }
 
+function asBoolean(value: unknown): boolean {
+  return value === true || value === 1 || value === "1";
+}
+
 function mapEntry(row: Record<string, unknown>): Entry {
   return {
     id: asString(row.id),
@@ -33,6 +37,9 @@ function mapEntry(row: Record<string, unknown>): Entry {
     summary: asNullableString(row.summary),
     imageUrl: asNullableString(row.image_url),
     createdAt: asDate(row.created_at),
+    isRead: row.is_read !== undefined ? asBoolean(row.is_read) : undefined,
+    isBookmarked:
+      row.is_bookmarked !== undefined ? asBoolean(row.is_bookmarked) : undefined,
   };
 }
 

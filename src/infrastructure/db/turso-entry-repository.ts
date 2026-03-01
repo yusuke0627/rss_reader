@@ -41,6 +41,9 @@ function mapEntry(row: Record<string, unknown>): Entry {
     summary: asNullableString(row.summary),
     imageUrl: asNullableString(row.image_url),
     createdAt: asDate(row.created_at),
+    isRead: row.is_read !== undefined ? asBoolean(row.is_read) : undefined,
+    isBookmarked:
+      row.is_bookmarked !== undefined ? asBoolean(row.is_bookmarked) : undefined,
   };
 }
 
@@ -97,7 +100,8 @@ export class TursoEntryRepository implements EntryRepository {
     const result = await db.execute({
       sql: `
         SELECT DISTINCT
-          e.id, e.feed_id, e.guid, e.title, e.url, e.content, e.published_at, e.author, e.summary, e.image_url, e.created_at
+          e.id, e.feed_id, e.guid, e.title, e.url, e.content, e.published_at, e.author, e.summary, e.image_url, e.created_at,
+          ue.is_read, ue.is_bookmarked
         FROM entries e
         INNER JOIN subscriptions s ON s.feed_id = e.feed_id
         LEFT JOIN user_entry ue ON ue.entry_id = e.id AND ue.user_id = s.user_id
@@ -118,9 +122,11 @@ export class TursoEntryRepository implements EntryRepository {
     const db = getTursoClient();
     const result = await db.execute({
       sql: `
-        SELECT e.id, e.feed_id, e.guid, e.title, e.url, e.content, e.published_at, e.author, e.summary, e.image_url, e.created_at
+        SELECT e.id, e.feed_id, e.guid, e.title, e.url, e.content, e.published_at, e.author, e.summary, e.image_url, e.created_at,
+               ue.is_read, ue.is_bookmarked
         FROM entries e
         INNER JOIN subscriptions s ON s.feed_id = e.feed_id
+        LEFT JOIN user_entry ue ON ue.entry_id = e.id AND ue.user_id = s.user_id
         WHERE s.user_id = ? AND e.id = ?
         LIMIT 1
       `,
