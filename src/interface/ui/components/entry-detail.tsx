@@ -112,18 +112,26 @@ export function EntryDetail({
             <div className="flex-1" />
 
             <button
-              onClick={() => onAction(entry.id, "bookmark")}
+              onClick={() => onAction(entry.id, entry.isBookmarked ? "unbookmark" : "bookmark")}
               disabled={isActionPending}
-              className="px-4 py-2.5 rounded-full m3-state-layer flex items-center gap-2 text-m3-on-surface-variant hover:text-m3-on-surface text-sm font-medium"
+              className={`px-4 py-2.5 rounded-full m3-state-layer flex items-center gap-2 text-sm font-medium transition-colors ${entry.isBookmarked
+                ? "bg-m3-surface-container-highest text-m3-on-surface"
+                : "text-m3-on-surface-variant hover:bg-m3-surface-container-highest hover:text-m3-on-surface"
+                }`}
             >
-              <Bookmark size={20} /> Bookmark
+              <Bookmark size={20} className={entry.isBookmarked ? "fill-current" : ""} />
+              {entry.isBookmarked ? "Unbookmark" : "Bookmark"}
             </button>
             <button
-              onClick={() => onAction(entry.id, "read")}
+              onClick={() => onAction(entry.id, entry.isRead ? "unread" : "read")}
               disabled={isActionPending}
-              className="px-4 py-2.5 rounded-full m3-state-layer flex items-center gap-2 bg-m3-secondary-container text-m3-on-secondary-container text-sm font-medium shadow-sm"
+              className={`px-4 py-2.5 rounded-full m3-state-layer flex items-center gap-2 text-sm font-medium shadow-sm transition-colors ${entry.isRead
+                ? "bg-m3-surface-container-high text-m3-on-surface"
+                : "bg-m3-secondary-container text-m3-on-secondary-container"
+                }`}
             >
-              <CheckCircle2 size={20} className="text-m3-primary" /> Mark as read
+              <CheckCircle2 size={20} className={entry.isRead ? "text-m3-on-surface-variant" : "text-m3-primary"} />
+              {entry.isRead ? "Mark as unread" : "Mark as read"}
             </button>
           </div>
 
