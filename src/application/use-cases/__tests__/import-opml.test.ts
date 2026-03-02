@@ -181,7 +181,7 @@ describe("ImportOpml UseCase", () => {
     vi.mocked(deps.feedRepository.create).mockResolvedValue(fakeFeed);
     vi.mocked(deps.feedRepository.createSubscription)
       .mockRejectedValueOnce(new Error("DB Error")) // 1回目は失敗
-      .mockResolvedValueOnce({} as any); // 2回目は成功
+      .mockResolvedValueOnce({} as unknown as Awaited<ReturnType<FeedRepository["createSubscription"]>>); // 2回目は成功
 
     //Act
     const result = await useCase.execute({

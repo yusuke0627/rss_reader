@@ -3,7 +3,7 @@ import type {
   EntryRepository,
   SaveFetchedEntriesInput,
 } from "@/application/ports";
-import type { Entry, UserEntry } from "@/domain/entities";
+import type { Entry } from "@/domain/entities";
 import { getTursoClient } from "./turso-client";
 
 function asString(value: unknown): string {
@@ -47,16 +47,7 @@ function mapEntry(row: Record<string, unknown>): Entry {
   };
 }
 
-function mapUserEntry(row: Record<string, unknown>): UserEntry {
-  return {
-    userId: asString(row.user_id),
-    entryId: asString(row.entry_id),
-    isRead: asBoolean(row.is_read),
-    isBookmarked: asBoolean(row.is_bookmarked),
-    readAt: asNullableDate(row.read_at),
-  };
-}
-
+ 
 export class TursoEntryRepository implements EntryRepository {
   async listByFilter(filter: EntryFilter): Promise<Entry[]> {
     const db = getTursoClient();
@@ -81,11 +72,15 @@ export class TursoEntryRepository implements EntryRepository {
     }
 
     if (filter.unreadOnly) {
-      conditions.push("COALESCE(ue.is_read, 0) = 0");
+      conditions.push(
+        "NOT EXISTS (SELECT 1 FROM entry_tags et JOIN tags t ON et.tag_id = t.id WHERE et.entry_id = e.id AND t.user_id = s.user_id AND t.is_system = 1 AND t.name = 'Read')"
+      );
     }
 
     if (filter.bookmarkedOnly) {
-      conditions.push("COALESCE(ue.is_bookmarked, 0) = 1");
+      conditions.push(
+        "EXISTS (SELECT 1 FROM entry_tags et JOIN tags t ON et.tag_id = t.id WHERE et.entry_id = e.id AND t.user_id = s.user_id AND t.is_system = 1 AND t.name = 'Bookmark')"
+      );
     }
 
     if (filter.search) {
@@ -101,10 +96,18 @@ export class TursoEntryRepository implements EntryRepository {
       sql: `
         SELECT DISTINCT
           e.id, e.feed_id, e.guid, e.title, e.url, e.content, e.published_at, e.author, e.summary, e.image_url, e.created_at,
-          ue.is_read, ue.is_bookmarked
+          EXISTS (
+            SELECT 1 FROM entry_tags et 
+            JOIN tags t ON et.tag_id = t.id 
+            WHERE et.entry_id = e.id AND t.user_id = s.user_id AND t.is_system = 1 AND t.name = 'Read'
+          ) as is_read, 
+          EXISTS (
+            SELECT 1 FROM entry_tags et 
+            JOIN tags t ON et.tag_id = t.id 
+            WHERE et.entry_id = e.id AND t.user_id = s.user_id AND t.is_system = 1 AND t.name = 'Bookmark'
+          ) as is_bookmarked
         FROM entries e
         INNER JOIN subscriptions s ON s.feed_id = e.feed_id
-        LEFT JOIN user_entry ue ON ue.entry_id = e.id AND ue.user_id = s.user_id
         WHERE ${conditions.join(" AND ")}
         ORDER BY COALESCE(e.published_at, e.created_at) DESC
         LIMIT ?
@@ -123,10 +126,18 @@ export class TursoEntryRepository implements EntryRepository {
     const result = await db.execute({
       sql: `
         SELECT e.id, e.feed_id, e.guid, e.title, e.url, e.content, e.published_at, e.author, e.summary, e.image_url, e.created_at,
-               ue.is_read, ue.is_bookmarked
+               EXISTS (
+                 SELECT 1 FROM entry_tags et 
+                 JOIN tags t ON et.tag_id = t.id 
+                 WHERE et.entry_id = e.id AND t.user_id = s.user_id AND t.is_system = 1 AND t.name = 'Read'
+               ) as is_read,
+               EXISTS (
+                 SELECT 1 FROM entry_tags et 
+                 JOIN tags t ON et.tag_id = t.id 
+                 WHERE et.entry_id = e.id AND t.user_id = s.user_id AND t.is_system = 1 AND t.name = 'Bookmark'
+               ) as is_bookmarked
         FROM entries e
         INNER JOIN subscriptions s ON s.feed_id = e.feed_id
-        LEFT JOIN user_entry ue ON ue.entry_id = e.id AND ue.user_id = s.user_id
         WHERE s.user_id = ? AND e.id = ?
         LIMIT 1
       `,
@@ -174,57 +185,83 @@ export class TursoEntryRepository implements EntryRepository {
   async markAsRead(input: {
     userId: string;
     entryId: string;
-    readAt: Date;
-  }): Promise<UserEntry> {
+  }): Promise<void> {
     const db = getTursoClient();
-    await db.execute({
-      sql: `
-        INSERT INTO user_entry (user_id, entry_id, is_read, is_bookmarked, read_at)
-        VALUES (?, ?, 1, 0, ?)
-        ON CONFLICT(user_id, entry_id)
-        DO UPDATE SET is_read = 1, read_at = excluded.read_at
-      `,
-      args: [input.userId, input.entryId, input.readAt.toISOString()],
+    
+    // Ensure system tag 'Read' exists
+    const tagResult = await db.execute({
+      sql: `SELECT id FROM tags WHERE user_id = ? AND is_system = 1 AND name = 'Read' LIMIT 1`,
+      args: [input.userId],
     });
+    
+    let tagId = tagResult.rows[0]?.id as string | undefined;
+    if (!tagId) {
+      tagId = crypto.randomUUID();
+      await db.execute({
+        sql: `INSERT INTO tags (id, user_id, name, is_system) VALUES (?, ?, 'Read', 1)`,
+        args: [tagId, input.userId],
+      });
+    }
 
-    return this.findUserEntry(input.userId, input.entryId);
+    await db.execute({
+      sql: `INSERT OR IGNORE INTO entry_tags (entry_id, tag_id) VALUES (?, ?)`,
+      args: [input.entryId, tagId],
+    });
   }
 
   async markAsUnread(input: {
     userId: string;
     entryId: string;
-  }): Promise<UserEntry> {
+  }): Promise<void> {
     const db = getTursoClient();
-    await db.execute({
-      sql: `
-        INSERT INTO user_entry (user_id, entry_id, is_read, is_bookmarked, read_at)
-        VALUES (?, ?, 0, 0, NULL)
-        ON CONFLICT(user_id, entry_id)
-        DO UPDATE SET is_read = 0, read_at = NULL
-      `,
-      args: [input.userId, input.entryId],
+    
+    const tagResult = await db.execute({
+      sql: `SELECT id FROM tags WHERE user_id = ? AND is_system = 1 AND name = 'Read' LIMIT 1`,
+      args: [input.userId],
     });
-
-    return this.findUserEntry(input.userId, input.entryId);
+    
+    const tagId = tagResult.rows[0]?.id as string | undefined;
+    if (tagId) {
+      await db.execute({
+        sql: `DELETE FROM entry_tags WHERE entry_id = ? AND tag_id = ?`,
+        args: [input.entryId, tagId],
+      });
+    }
   }
 
   async toggleBookmark(input: {
     userId: string;
     entryId: string;
     isBookmarked: boolean;
-  }): Promise<UserEntry> {
+  }): Promise<void> {
     const db = getTursoClient();
-    await db.execute({
-      sql: `
-        INSERT INTO user_entry (user_id, entry_id, is_read, is_bookmarked, read_at)
-        VALUES (?, ?, 0, ?, NULL)
-        ON CONFLICT(user_id, entry_id)
-        DO UPDATE SET is_bookmarked = excluded.is_bookmarked
-      `,
-      args: [input.userId, input.entryId, input.isBookmarked ? 1 : 0],
+    
+    // Ensure system tag exists
+    const tagResult = await db.execute({
+      sql: `SELECT id FROM tags WHERE user_id = ? AND is_system = 1 AND name = 'Bookmark' LIMIT 1`,
+      args: [input.userId],
     });
+    
+    let tagId = tagResult.rows[0]?.id as string | undefined;
+    if (!tagId) {
+      tagId = crypto.randomUUID();
+      await db.execute({
+        sql: `INSERT INTO tags (id, user_id, name, is_system) VALUES (?, ?, 'Bookmark', 1)`,
+        args: [tagId, input.userId],
+      });
+    }
 
-    return this.findUserEntry(input.userId, input.entryId);
+    if (input.isBookmarked) {
+      await db.execute({
+        sql: `INSERT OR IGNORE INTO entry_tags (entry_id, tag_id) VALUES (?, ?)`,
+        args: [input.entryId, tagId],
+      });
+    } else {
+      await db.execute({
+        sql: `DELETE FROM entry_tags WHERE entry_id = ? AND tag_id = ?`,
+        args: [input.entryId, tagId],
+      });
+    }
   }
 
   async listPublicEntriesBySlug(input: {
@@ -273,26 +310,5 @@ export class TursoEntryRepository implements EntryRepository {
     return mapEntry(row);
   }
 
-  private async findUserEntry(
-    userId: string,
-    entryId: string,
-  ): Promise<UserEntry> {
-    const db = getTursoClient();
-    const result = await db.execute({
-      sql: `
-        SELECT user_id, entry_id, is_read, is_bookmarked, read_at
-        FROM user_entry
-        WHERE user_id = ? AND entry_id = ?
-        LIMIT 1
-      `,
-      args: [userId, entryId],
-    });
 
-    const row = result.rows[0] as Record<string, unknown> | undefined;
-    if (!row) {
-      throw new Error("Failed to persist user entry state");
-    }
-
-    return mapUserEntry(row);
-  }
 }

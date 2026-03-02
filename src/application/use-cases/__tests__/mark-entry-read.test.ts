@@ -3,7 +3,7 @@ import { EntryNotFoundError, MarkEntryRead } from "../mark-entry-read";
 
 import type { EntryRepository } from "@/application/ports";
 
-import type { UserEntry, Entry } from "@/domain/entities";
+import type { Entry } from "@/domain/entities";
 
 function createMockDeps() {
   const entryRepository: EntryRepository = {
@@ -20,13 +20,6 @@ function createMockDeps() {
   return { entryRepository };
 }
 
-const fakeUserEntry: UserEntry = {
-  userId: "user-1",
-  entryId: "entry-1",
-  isRead: true,
-  isBookmarked: false,
-  readAt: new Date("2026-01-01"),
-};
 
 const fakeEntry: Entry = {
   id: "entry-1",
@@ -50,7 +43,7 @@ describe("MarkEntryRead UseCase", () => {
     ).mockResolvedValue(fakeEntry);
     (
       deps.entryRepository.markAsRead as ReturnType<typeof vi.fn>
-    ).mockResolvedValue(fakeUserEntry);
+    ).mockResolvedValue(undefined);
     const useCase = new MarkEntryRead(deps);
     await useCase.execute({
       entryId: "entry-1",
@@ -63,7 +56,6 @@ describe("MarkEntryRead UseCase", () => {
     expect(deps.entryRepository.markAsRead).toHaveBeenCalledWith({
       userId: "user-1",
       entryId: "entry-1",
-      readAt: expect.any(Date), // Dateであれば何でもOK
     });
   });
 

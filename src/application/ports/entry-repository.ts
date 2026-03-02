@@ -1,4 +1,4 @@
-import type { Entry, UserEntry } from "@/domain/entities";
+import type { Entry } from "@/domain/entities";
 
 // Entryの取得・更新に関する契約。
 // `user_entry` の read/bookmark 状態はここ経由で更新する。
@@ -37,14 +37,13 @@ export interface EntryRepository {
   markAsRead(input: {
     userId: string;
     entryId: string;
-    readAt: Date;
-  }): Promise<UserEntry>;
-  markAsUnread(input: { userId: string; entryId: string }): Promise<UserEntry>;
+  }): Promise<void>;
+  markAsUnread(input: { userId: string; entryId: string }): Promise<void>;
   toggleBookmark(input: {
     userId: string;
     entryId: string;
     isBookmarked: boolean;
-  }): Promise<UserEntry>;
+  }): Promise<void>;
   updateSummary(input: { entryId: string; summary: string }): Promise<Entry>;
   listPublicEntriesBySlug(input: {
     slug: string;

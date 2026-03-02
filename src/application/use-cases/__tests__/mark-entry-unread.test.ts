@@ -2,8 +2,7 @@ import { describe, it, expect, vi } from "vitest";
 import { EntryNotFoundError, MarkEntryUnread } from "../mark-entry-unread";
 
 import type { EntryRepository } from "@/application/ports";
-import type { UserEntry, Entry } from "@/domain/entities";
-
+import type { Entry } from "@/domain/entities";
 function createMockDeps() {
   const entryRepository: EntryRepository = {
     findByIdForUser: vi.fn(),
@@ -19,13 +18,6 @@ function createMockDeps() {
   return { entryRepository };
 }
 
-const fakeUserEntry: UserEntry = {
-  userId: "user-1",
-  entryId: "entry-1",
-  isRead: true,
-  isBookmarked: false,
-  readAt: new Date("2026-01-01"),
-};
 
 const fakeEntry: Entry = {
   id: "entry-1",
@@ -49,7 +41,7 @@ describe("MarkEntryUnread UseCase", () => {
     ).mockResolvedValue(fakeEntry);
     (
       deps.entryRepository.markAsRead as ReturnType<typeof vi.fn>
-    ).mockResolvedValue(fakeUserEntry);
+    ).mockResolvedValue(undefined);
 
     const useCase = new MarkEntryUnread(deps); // use caseのインスタンス化
     await useCase.execute({

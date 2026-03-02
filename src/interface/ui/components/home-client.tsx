@@ -112,11 +112,11 @@ export function HomeClient() {
     },
     onSuccess: async (newEntry) => {
       clearErrorMessages();
-      queryClient.setQueryData(["entries", { unreadOnly, search }], (old: any) => {
+      queryClient.setQueryData(["entries", { unreadOnly, search }], (old: EntriesResponse | undefined) => {
         if (!old) return old;
         return {
           ...old,
-          entries: old.entries.map((e: any) =>
+          entries: old.entries.map((e: EntryItemType) =>
             e.id === newEntry.id ? { ...e, summary: newEntry.summary } : e
           ),
         };
@@ -161,7 +161,12 @@ export function HomeClient() {
           entries={entriesQuery.data?.entries || []}
           isLoading={entriesQuery.isLoading}
           activeEntryId={activeEntryId}
-          onSelectEntry={(entry) => setActiveEntryId(entry.id)}
+          onSelectEntry={(entry) => {
+            setActiveEntryId(entry.id);
+            if (!entry.isRead) {
+              entryActionMutation.mutate({ entryId: entry.id, action: "read" });
+            }
+          }}
           search={search}
           onSearchChange={setSearch}
           unreadOnly={unreadOnly}

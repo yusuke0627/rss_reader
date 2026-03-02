@@ -20,6 +20,7 @@ const fakeTag = {
   id: "tag-1",
   userId: "user-1",
   name: "News",
+  isSystem: false,
 };
 
 describe("DeleteTag uesCase", () => {

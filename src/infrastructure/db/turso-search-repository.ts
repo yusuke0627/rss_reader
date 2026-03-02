@@ -82,7 +82,13 @@ export class TursoSearchRepository implements SearchRepository {
     const result = await db.execute({
       sql: `
         SELECT DISTINCT
-          e.id, e.feed_id, e.guid, e.title, e.url, e.content, e.published_at, e.author, e.summary, e.image_url, e.created_at
+          e.id, e.feed_id, e.guid, e.title, e.url, e.content, e.published_at, e.author, e.summary, e.image_url, e.created_at,
+          ue.is_read,
+          EXISTS (
+            SELECT 1 FROM entry_tags et
+            JOIN tags t ON et.tag_id = t.id
+            WHERE et.entry_id = e.id AND t.user_id = s.user_id AND t.is_system = 1 AND t.name = 'Bookmark'
+          ) as is_bookmarked
         FROM entries_fts fts
         INNER JOIN entries e ON e.id = fts.entry_id
         INNER JOIN subscriptions s ON s.feed_id = e.feed_id
