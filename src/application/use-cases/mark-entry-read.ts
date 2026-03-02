@@ -1,4 +1,4 @@
-import type { UserEntry } from "@/domain/entities";
+
 import type { EntryRepository } from "@/application/ports";
 
 export interface MarkEntryReadInput {
@@ -21,7 +21,7 @@ export interface MarkEntryReadDependencies {
 export class MarkEntryRead {
   constructor(private readonly deps: MarkEntryReadDependencies) {}
 
-  async execute(input: MarkEntryReadInput): Promise<UserEntry> {
+  async execute(input: MarkEntryReadInput): Promise<void> {
     // 自分がアクセス可能なentryかを先に検証する。
     const entry = await this.deps.entryRepository.findByIdForUser({
       userId: input.userId,
@@ -33,10 +33,9 @@ export class MarkEntryRead {
     }
 
     // user_entry の冪等upsertは repository 側に任せる。
-    return this.deps.entryRepository.markAsRead({
+    await this.deps.entryRepository.markAsRead({
       userId: input.userId,
       entryId: input.entryId,
-      readAt: input.readAt ?? new Date(),
     });
   }
 }

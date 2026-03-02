@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import rehypeRaw from "rehype-raw";
-import { Sparkles, Loader2, ExternalLink, Bookmark, CheckCircle2, FileText } from "lucide-react";
+import { Sparkles, Loader2, ExternalLink, Bookmark, FileText } from "lucide-react";
 import type { EntryItemType } from "./entry-list";
 import { format } from "date-fns";
 
@@ -121,17 +121,6 @@ export function EntryDetail({
             >
               <Bookmark size={20} className={entry.isBookmarked ? "fill-current" : ""} />
               {entry.isBookmarked ? "Unbookmark" : "Bookmark"}
-            </button>
-            <button
-              onClick={() => onAction(entry.id, entry.isRead ? "unread" : "read")}
-              disabled={isActionPending}
-              className={`px-4 py-2.5 rounded-full m3-state-layer flex items-center gap-2 text-sm font-medium shadow-sm transition-colors ${entry.isRead
-                ? "bg-m3-surface-container-high text-m3-on-surface"
-                : "bg-m3-secondary-container text-m3-on-secondary-container"
-                }`}
-            >
-              <CheckCircle2 size={20} className={entry.isRead ? "text-m3-on-surface-variant" : "text-m3-primary"} />
-              {entry.isRead ? "Mark as unread" : "Mark as read"}
             </button>
           </div>
 

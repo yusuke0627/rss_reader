@@ -3,7 +3,7 @@ import type {
   EntryFilter,
   SaveFetchedEntriesInput,
 } from "@/application/ports";
-import type { Entry, UserEntry } from "@/domain/entities";
+import type { Entry } from "@/domain/entities";
 import { createId, inMemoryStore } from "./in-memory-store";
 
 export class InMemoryEntryRepository implements EntryRepository {
@@ -14,11 +14,6 @@ export class InMemoryEntryRepository implements EntryRepository {
         .map((subscription) => subscription.feedId),
     );
 
-    const userEntriesById = new Map(
-      inMemoryStore.userEntries
-        .filter((state) => state.userId === filter.userId)
-        .map((state) => [state.entryId, state]),
-    );
 
     return inMemoryStore.entries
       .filter((entry) => subscribedFeedIds.has(entry.feedId))
@@ -27,18 +22,36 @@ export class InMemoryEntryRepository implements EntryRepository {
       )
       .filter((entry) => {
         if (!filter.unreadOnly) return true;
-        return !userEntriesById.get(entry.id)?.isRead;
+        const isRead = inMemoryStore.entryTags.some(et => {
+          if (et.entryId !== entry.id) return false;
+          const tag = inMemoryStore.tags.find(t => t.id === et.tagId);
+          return tag?.isSystem && tag?.name === 'Read' && tag?.userId === filter.userId;
+        });
+        return !isRead;
       })
       .filter((entry) => {
         if (!filter.bookmarkedOnly) return true;
-        return Boolean(userEntriesById.get(entry.id)?.isBookmarked);
+        return inMemoryStore.entryTags.some(et => {
+          if (et.entryId !== entry.id) return false;
+          const tag = inMemoryStore.tags.find(t => t.id === et.tagId);
+          return tag?.isSystem && tag?.name === 'Bookmark' && tag?.userId === filter.userId;
+        });
       })
       .map((entry) => {
-        const state = userEntriesById.get(entry.id);
+        const isRead = inMemoryStore.entryTags.some(et => {
+          if (et.entryId !== entry.id) return false;
+          const tag = inMemoryStore.tags.find(t => t.id === et.tagId);
+          return tag?.isSystem && tag?.name === 'Read' && tag?.userId === filter.userId;
+        });
+        const isBookmarked = inMemoryStore.entryTags.some(et => {
+          if (et.entryId !== entry.id) return false;
+          const tag = inMemoryStore.tags.find(t => t.id === et.tagId);
+          return tag?.isSystem && tag?.name === 'Bookmark' && tag?.userId === filter.userId;
+        });
         return {
           ...entry,
-          isRead: state?.isRead ?? false,
-          isBookmarked: state?.isBookmarked ?? false,
+          isRead,
+          isBookmarked,
         };
       })
       .filter((entry) => {
@@ -122,32 +135,50 @@ export class InMemoryEntryRepository implements EntryRepository {
   async markAsRead(input: {
     userId: string;
     entryId: string;
-    readAt: Date;
-  }): Promise<UserEntry> {
-    const state = this.upsertUserEntry(input.userId, input.entryId);
-    state.isRead = true;
-    state.readAt = input.readAt;
-    return state;
+  }): Promise<void> {
+    let tag = inMemoryStore.tags.find(t => t.userId === input.userId && t.name === 'Read' && t.isSystem);
+    if (!tag) {
+      tag = { id: createId(), userId: input.userId, name: 'Read', isSystem: true };
+      inMemoryStore.tags.push(tag);
+    }
+    
+    if (!inMemoryStore.entryTags.some(et => et.entryId === input.entryId && et.tagId === tag!.id)) {
+      inMemoryStore.entryTags.push({ entryId: input.entryId, tagId: tag.id });
+    }
   }
 
   async markAsUnread(input: {
     userId: string;
     entryId: string;
-  }): Promise<UserEntry> {
-    const state = this.upsertUserEntry(input.userId, input.entryId);
-    state.isRead = false;
-    state.readAt = null;
-    return state;
+  }): Promise<void> {
+    const tag = inMemoryStore.tags.find(t => t.userId === input.userId && t.name === 'Read' && t.isSystem);
+    if (tag) {
+      inMemoryStore.entryTags = inMemoryStore.entryTags.filter(
+        et => !(et.entryId === input.entryId && et.tagId === tag.id)
+      );
+    }
   }
 
   async toggleBookmark(input: {
     userId: string;
     entryId: string;
     isBookmarked: boolean;
-  }): Promise<UserEntry> {
-    const state = this.upsertUserEntry(input.userId, input.entryId);
-    state.isBookmarked = input.isBookmarked;
-    return state;
+  }): Promise<void> {
+    let tag = inMemoryStore.tags.find(t => t.userId === input.userId && t.name === 'Bookmark' && t.isSystem);
+    if (!tag) {
+      tag = { id: createId(), userId: input.userId, name: 'Bookmark', isSystem: true };
+      inMemoryStore.tags.push(tag);
+    }
+    
+    if (input.isBookmarked) {
+      if (!inMemoryStore.entryTags.some(et => et.entryId === input.entryId && et.tagId === tag!.id)) {
+        inMemoryStore.entryTags.push({ entryId: input.entryId, tagId: tag.id });
+      }
+    } else {
+      inMemoryStore.entryTags = inMemoryStore.entryTags.filter(
+        et => !(et.entryId === input.entryId && et.tagId === tag!.id)
+      );
+    }
   }
 
   async listPublicEntriesBySlug(input: {
@@ -193,23 +224,5 @@ export class InMemoryEntryRepository implements EntryRepository {
     return entry;
   }
 
-  private upsertUserEntry(userId: string, entryId: string): UserEntry {
-    // PRIMARY KEY(user_id, entry_id) を想定。
-    const existing = inMemoryStore.userEntries.find(
-      (item) => item.userId === userId && item.entryId === entryId,
-    );
-    if (existing) {
-      return existing;
-    }
 
-    const created: UserEntry = {
-      userId,
-      entryId,
-      isRead: false,
-      isBookmarked: false,
-      readAt: null,
-    };
-    inMemoryStore.userEntries.push(created);
-    return created;
-  }
 }

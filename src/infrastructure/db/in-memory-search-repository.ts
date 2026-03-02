@@ -31,11 +31,7 @@ export class InMemorySearchRepository implements SearchRepository {
       }
     }
 
-    const statesByEntryId = new Map(
-      inMemoryStore.userEntries
-        .filter((state) => state.userId === input.userId)
-        .map((state) => [state.entryId, state]),
-    );
+
 
     return inMemoryStore.entries
       .filter((entry) => subscribedFeedIds.has(entry.feedId))
@@ -48,7 +44,12 @@ export class InMemorySearchRepository implements SearchRepository {
       })
       .filter((entry) => {
         if (!input.unreadOnly) return true;
-        return !statesByEntryId.get(entry.id)?.isRead;
+        const isRead = inMemoryStore.entryTags.some(et => {
+          if (et.entryId !== entry.id) return false;
+          const tag = inMemoryStore.tags.find(t => t.id === et.tagId);
+          return tag?.isSystem && tag?.name === 'Read' && tag?.userId === input.userId;
+        });
+        return !isRead;
       })
       .filter((entry) => {
         const haystack = `${entry.title}\n${entry.content ?? ""}`.toLowerCase();

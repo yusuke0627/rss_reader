@@ -1,4 +1,5 @@
 PRAGMA foreign_keys = ON;
+DROP TABLE IF EXISTS user_entry;
 
 CREATE TABLE IF NOT EXISTS users (
   id TEXT PRIMARY KEY,
@@ -29,6 +30,7 @@ CREATE TABLE IF NOT EXISTS tags (
   id TEXT PRIMARY KEY,
   user_id TEXT NOT NULL,
   name TEXT NOT NULL,
+  is_system INTEGER NOT NULL DEFAULT 0,
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
@@ -68,16 +70,7 @@ CREATE TABLE IF NOT EXISTS entry_tags (
   FOREIGN KEY (tag_id) REFERENCES tags(id) ON DELETE CASCADE
 );
 
-CREATE TABLE IF NOT EXISTS user_entry (
-  user_id TEXT NOT NULL,
-  entry_id TEXT NOT NULL,
-  is_read INTEGER NOT NULL DEFAULT 0,
-  is_bookmarked INTEGER NOT NULL DEFAULT 0,
-  read_at TEXT,
-  PRIMARY KEY (user_id, entry_id),
-  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-  FOREIGN KEY (entry_id) REFERENCES entries(id) ON DELETE CASCADE
-);
+ 
 
 CREATE TABLE IF NOT EXISTS public_profile (
   user_id TEXT PRIMARY KEY,

@@ -11,6 +11,7 @@ function mapTag(row: Record<string, unknown>): Tag {
     id: asString(row.id),
     userId: asString(row.user_id),
     name: asString(row.name),
+    isSystem: row.is_system === 1 || row.is_system === "1" || row.is_system === true,
   };
 }
 
@@ -19,7 +20,7 @@ export class TursoTagRepository implements TagRepository {
     const db = getTursoClient();
     const result = await db.execute({
       sql: `
-        SELECT id, user_id, name
+        SELECT id, user_id, name, is_system
         FROM tags
         WHERE user_id = ?
         ORDER BY name ASC
@@ -37,7 +38,7 @@ export class TursoTagRepository implements TagRepository {
     const db = getTursoClient();
     const result = await db.execute({
       sql: `
-        SELECT id, user_id, name
+        SELECT id, user_id, name, is_system
         FROM tags
         WHERE user_id = ? AND id = ?
         LIMIT 1
@@ -113,7 +114,7 @@ export class TursoTagRepository implements TagRepository {
     const db = getTursoClient();
     const result = await db.execute({
       sql: `
-      SELECT t.id, t.user_id, t.name
+      SELECT t.id, t.user_id, t.name, t.is_system
       FROM tags t
       JOIN entry_tags et ON t.id = et.tag_id
       WHERE et.entry_id = ? AND t.user_id = ?

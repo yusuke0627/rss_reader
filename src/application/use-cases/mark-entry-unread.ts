@@ -1,4 +1,4 @@
-import type { UserEntry } from "@/domain/entities";
+
 import type { EntryRepository } from "@/application/ports";
 import { EntryNotFoundError } from "./mark-entry-read";
 
@@ -14,7 +14,7 @@ export interface MarkEntryUnreadDependencies {
 export class MarkEntryUnread {
   constructor(private readonly deps: MarkEntryUnreadDependencies) {}
 
-  async execute(input: MarkEntryUnreadInput): Promise<UserEntry> {
+  async execute(input: MarkEntryUnreadInput): Promise<void> {
     // read と同様、先に可視性チェックしてから状態更新する。
     const entry = await this.deps.entryRepository.findByIdForUser({
       userId: input.userId,
@@ -25,7 +25,7 @@ export class MarkEntryUnread {
       throw new EntryNotFoundError(input.entryId);
     }
 
-    return this.deps.entryRepository.markAsUnread({
+    await this.deps.entryRepository.markAsUnread({
       userId: input.userId,
       entryId: input.entryId,
     });

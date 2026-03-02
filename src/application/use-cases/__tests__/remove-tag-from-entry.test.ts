@@ -19,7 +19,8 @@ function createMockDeps() {
 const fakeTag = {
   id: "tag-1",
   userId: "user-1",
-  name: "News",
+  name: "Tech",
+  isSystem: false,
 };
 
 describe("RemoveTagFromEntry useCase", () => {

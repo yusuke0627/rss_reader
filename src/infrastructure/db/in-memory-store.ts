@@ -7,7 +7,6 @@ import type {
   Subscription,
   Tag,
   User,
-  UserEntry,
 } from "@/domain/entities";
 
 export interface InMemoryStore {
@@ -18,7 +17,6 @@ export interface InMemoryStore {
   subscriptions: Subscription[];
   entries: Entry[];
   entryTags: EntryTag[];
-  userEntries: UserEntry[];
   publicProfiles: PublicProfile[];
 }
 
@@ -30,7 +28,6 @@ export const inMemoryStore: InMemoryStore = {
   subscriptions: [],
   entries: [],
   entryTags: [],
-  userEntries: [],
   publicProfiles: [],
 };
 

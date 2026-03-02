@@ -14,12 +14,12 @@ export async function POST(
 
     // route層ではUseCase呼び出しのみに集中する。
     const useCase = createMarkEntryReadUseCase();
-    const result = await useCase.execute({
+    await useCase.execute({
       userId,
       entryId: id,
     });
 
-    return NextResponse.json(result, { status: 200 });
+    return NextResponse.json({ success: true }, { status: 200 });
   } catch (error) {
     return errorResponse(error, "POST /api/entries/[id]/read");
   }

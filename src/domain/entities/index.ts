@@ -8,4 +8,4 @@ export * from "./public-profile";
 export * from "./subscription";
 export * from "./tag";
 export * from "./user";
-export * from "./user-entry";
+

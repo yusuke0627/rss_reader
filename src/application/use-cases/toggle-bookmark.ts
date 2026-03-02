@@ -1,4 +1,4 @@
-import type { UserEntry } from "@/domain/entities";
+
 import type { EntryRepository } from "@/application/ports";
 import { EntryNotFoundError } from "./mark-entry-read";
 
@@ -15,7 +15,7 @@ export interface ToggleBookmarkDependencies {
 export class ToggleBookmark {
   constructor(private readonly deps: ToggleBookmarkDependencies) {}
 
-  async execute(input: ToggleBookmarkInput): Promise<UserEntry> {
+  async execute(input: ToggleBookmarkInput): Promise<void> {
     // 他人のentryを更新できないよう、対象の所属を検証する。
     const entry = await this.deps.entryRepository.findByIdForUser({
       userId: input.userId,
@@ -26,7 +26,7 @@ export class ToggleBookmark {
       throw new EntryNotFoundError(input.entryId);
     }
 
-    return this.deps.entryRepository.toggleBookmark({
+    await this.deps.entryRepository.toggleBookmark({
       userId: input.userId,
       entryId: input.entryId,
       isBookmarked: input.isBookmarked,

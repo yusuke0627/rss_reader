@@ -23,6 +23,7 @@ export class InMemoryTagRepository implements TagRepository {
       id: createId(),
       userId: input.userId,
       name: input.name,
+      isSystem: false,
     };
     inMemoryStore.tags.push(tag);
     return tag;
