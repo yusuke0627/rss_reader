@@ -15,6 +15,7 @@ import {
   DeleteTag,
   GetEntriesByTag,
   RemoveTagFromEntry,
+  ListFeeds,
 } from "@/application/use-cases";
 import { OpmlServiceImpl } from "@/infrastructure/rss/opml-service-impl";
 import { createRepositories } from "@/infrastructure/db";
@@ -135,4 +136,8 @@ export function createRemoveTagFromEntryUseCase(): RemoveTagFromEntry {
     tagRepository: repositories.tagRepository,
   });
 
+}
+
+export function createListFeedsUseCase(): ListFeeds {
+  return new ListFeeds(repositories.feedRepository);
 }

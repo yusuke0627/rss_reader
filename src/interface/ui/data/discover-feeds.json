@@ -1,0 +1,101 @@
+[
+  {
+    "category": "Technology",
+    "feeds": [
+      {
+        "title": "TechCrunch (US)",
+        "description": "The latest technology news and information from startups to giants.",
+        "url": "https://techcrunch.com/feed/",
+        "iconBgColor": "bg-green-600"
+      },
+      {
+        "title": "Zenn",
+        "description": "エンジニアのための情報共有コミュニティ(トレンド)",
+        "url": "https://zenn.dev/topics/zenn/feed",
+        "iconBgColor": "bg-blue-400"
+      },
+      {
+        "title": "Publickey",
+        "description": "エンタープライズIT、クラウド、最新テクノロジー動向",
+        "url": "https://www.publickey1.jp/atom.xml",
+        "iconBgColor": "bg-cyan-600"
+      },
+      {
+        "title": "ITmedia NEWS",
+        "description": "最新のITニュース、ビジネスからガジェットまで",
+        "url": "https://rss.itmedia.co.jp/rss/2.0/news_bursts.xml",
+        "iconBgColor": "bg-indigo-500"
+      },
+      {
+        "title": "Gizmodo Japan",
+        "description": "最新のスマートフォン、ガジェット、テクノロジー情報",
+        "url": "https://www.gizmodo.jp/index.xml",
+        "iconBgColor": "bg-zinc-800"
+      },
+      {
+        "title": "GIGAZINE",
+        "description": "デザイン・コンピュータ・ソフトウェア・ハードウェア・ゲームに関するニュース",
+        "url": "https://gigazine.net/news/rss_2.0/",
+        "iconBgColor": "bg-orange-600"
+      }
+    ]
+  },
+  {
+    "category": "Design",
+    "feeds": [
+      {
+        "title": "Dribbble Popular",
+        "description": "世界のトップクリエイターによるデザインのインスピレーション",
+        "url": "https://dribbble.com/shots/popular.rss",
+        "iconBgColor": "bg-pink-500"
+      },
+      {
+        "title": "Awwwards",
+        "description": "世界中の優れたウェブデザインのアワード",
+        "url": "https://www.awwwards.com/blog/feed/",
+        "iconBgColor": "bg-teal-600"
+      },
+      {
+        "title": "コリス (Coliss)",
+        "description": "Webデザイン、HTML/CSS、フリー素材などの情報",
+        "url": "https://coliss.com/feed/",
+        "iconBgColor": "bg-orange-500"
+      },
+      {
+        "title": "Spoon & Tamago",
+        "description": "日本のユニークなプロダクトデザインからアート・建築まで",
+        "url": "https://www.spoon-tamago.com/feed/",
+        "iconBgColor": "bg-amber-500"
+      }
+    ]
+  },
+  {
+    "category": "Life & Culture",
+    "feeds": [
+      {
+        "title": "ライフハッカー・ジャパン",
+        "description": "仕事術、生活術、ガジェット活用法など「ハック」する情報",
+        "url": "https://www.lifehacker.jp/feed/index.xml",
+        "iconBgColor": "bg-emerald-500"
+      },
+      {
+        "title": "Nippon.com",
+        "description": "日本の文化、社会、ライフスタイルを深堀り（日本語）",
+        "url": "https://www.nippon.com/ja/rss.xml",
+        "iconBgColor": "bg-red-600"
+      },
+      {
+        "title": "WIRED.jp",
+        "description": "未来のビジネス、カルチャー、テクノロジーの交差点",
+        "url": "https://wired.jp/feed/rss2/",
+        "iconBgColor": "bg-black"
+      },
+      {
+        "title": "note 公式推薦",
+        "description": "クリエイターの多様なエッセイやコラムの集まる場所",
+        "url": "https://note.com/notemagazine/rss",
+        "iconBgColor": "bg-green-500"
+      }
+    ]
+  }
+]

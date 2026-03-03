@@ -1,6 +1,6 @@
 import { registerFeedSchema } from "@/interface/http/schemas/register-feed-schema";
 import { requireUserId } from "@/interface/http/auth-user";
-import { createRegisterFeedUseCase } from "@/interface/http/use-case-factory";
+import { createRegisterFeedUseCase, createListFeedsUseCase } from "@/interface/http/use-case-factory";
 import { NextRequest, NextResponse } from "next/server";
 import { errorResponse } from "@/interface/http/api-error";
 
@@ -22,5 +22,16 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(result, { status: 201 });
   } catch (error) {
     return errorResponse(error, "POST /api/feeds");
+  }
+}
+
+export async function GET() {
+  try {
+    const userId = await requireUserId();
+    const useCase = createListFeedsUseCase();
+    const feeds = await useCase.execute({ userId });
+    return NextResponse.json({ feeds });
+  } catch (error) {
+    return errorResponse(error, "GET /api/feeds");
   }
 }

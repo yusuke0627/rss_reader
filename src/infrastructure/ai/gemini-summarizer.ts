@@ -13,7 +13,7 @@ export class GeminiSummarizer implements Summarizer {
 
   async summarize(content: string): Promise<string> {
     const model = this.genAI.getGenerativeModel({
-      model: "gemini-flash-latest",
+      model: "gemini-2.5-flash",
     });
 
     // プロンプトの組み立て

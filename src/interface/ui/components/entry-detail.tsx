@@ -89,6 +89,25 @@ export function EntryDetail({
             </div>
           </div>
 
+          {/* Hero Image */}
+          {entry.imageUrl && (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.98 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.5, delay: 0.2 }}
+              className="mb-10 group overflow-hidden rounded-[32px] bg-m3-surface-container-highest shadow-md"
+            >
+              <img
+                src={entry.imageUrl}
+                alt=""
+                className="w-full h-auto aspect-video object-cover transition-transform duration-700 group-hover:scale-105"
+                onError={(e) => {
+                  (e.currentTarget.parentElement as HTMLElement).style.display = "none";
+                }}
+              />
+            </motion.div>
+          )}
+
           {/* Content / Description */}
           {safeContent && (
             <div className="mb-12 prose prose-invert prose-p:text-m3-on-surface prose-headings:text-m3-on-surface prose-a:text-m3-primary hover:prose-a:text-m3-primary/80 prose-strong:text-m3-on-surface prose-li:text-m3-on-surface max-w-none prose-lg leading-relaxed">
