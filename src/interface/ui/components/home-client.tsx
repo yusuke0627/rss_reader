@@ -209,7 +209,7 @@ export function HomeClient() {
       {activeView === "home" ? (
         <>
           {/* 2. Middle Article List */}
-          <div className="w-[400px] flex-shrink-0 flex flex-col h-full relative">
+          <div className="w-[420px] shrink-0 h-full border-r border-m3-outline-variant">
             <EntryList
               entries={entriesQuery.data?.entries || []}
               isLoading={entriesQuery.isLoading}
@@ -234,7 +234,10 @@ export function HomeClient() {
             {errorMessage && (
               <div className="absolute top-4 right-4 z-50 w-full max-w-sm rounded-2xl p-4 shadow-lg flex justify-between items-start m3-state-layer bg-m3-error-container text-m3-on-error-container">
                 <span className="text-sm font-medium">{errorMessage}</span>
-                <button onClick={clearErrorMessages} className="text-m3-on-error-container/70 hover:text-m3-on-error-container ml-3 p-1 rounded-full m3-state-layer">
+                <button
+                  onClick={clearErrorMessages}
+                  className="text-m3-on-error-container/70 hover:text-m3-on-error-container ml-3 p-1 rounded-full m3-state-layer"
+                >
                   ✕
                 </button>
               </div>
@@ -243,7 +246,9 @@ export function HomeClient() {
               entry={activeEntry}
               onSummarize={(id) => summarizeMutation.mutate(id)}
               isSummarizePending={summarizeMutation.isPending}
-              onAction={(id, action) => entryActionMutation.mutate({ entryId: id, action })}
+              onAction={(id, action) =>
+                entryActionMutation.mutate({ entryId: id, action })
+              }
               isActionPending={entryActionMutation.isPending}
             />
           </div>
@@ -252,7 +257,9 @@ export function HomeClient() {
         <div className="flex-1 min-w-0 bg-m3-surface overflow-auto">
           <DiscoverView
             onSubscribe={(url) => createFeedMutation.mutate(url)}
-            subscribingUrl={createFeedMutation.isPending ? createFeedMutation.variables : null}
+            subscribingUrl={
+              createFeedMutation.isPending ? createFeedMutation.variables : null
+            }
             subscribedUrls={subscribedUrls}
           />
         </div>
