@@ -82,6 +82,10 @@ export function HomeClient() {
   const [unreadOnly, setUnreadOnly] = useState(false);
   const [activeEntryId, setActiveEntryId] = useState<string | null>(null);
 
+  // 選択中の記事データを個別に保持します。これにより、左側のリストからフィルター（「未読のみ」など）によって
+  // 記事が消えた場合でも、右側の詳細表示が即座に消えてしまうのを防ぎます。
+  const [activeEntryData, setActiveEntryData] = useState<EntryItemType | null>(null);
+
   const entriesQuery = useQuery({
     queryKey: ["entries", { unreadOnly, search }],
     queryFn: () => fetchEntries({ unreadOnly, search }),
@@ -139,10 +143,24 @@ export function HomeClient() {
     return null;
   }, [createFeedMutation.error, entriesQuery.error, entryActionMutation.error, summarizeMutation.error]);
 
-  const activeEntry = useMemo(
-    () => entriesQuery.data?.entries.find((e) => e.id === activeEntryId) || null,
-    [activeEntryId, entriesQuery.data?.entries]
-  );
+  // リストが更新された際、現在選択中の記事のステータスを最新に保つためにデータを更新します。
+  // ただし、フィルター(「未読のみ」等)の影響でリストから消えた場合は、既存のデータを保持して右枠の表示を維持します。
+  const activeEntry = useMemo(() => {
+    // activeEntryIdがなければ、何もしない
+    if (!activeEntryId) return null;
+    // リストから該当の記事を検索
+    const fromList = entriesQuery.data?.entries.find((e) => e.id === activeEntryId);
+    // リストに該当の記事があれば、activeEntryDataを更新して返す
+    // これがtrueであればリストには存在しないが、activeEntryDataには存在する可能性がある
+    if (fromList) {
+      //今詳細表示している記事とは別の記事を表示する場合は、activeEntryDataを更新する
+      //そうでなければ同一記事を参照する振る舞いのため、activeEntryDataをそのまま返す
+      if (activeEntryData !== fromList) setActiveEntryData(fromList);
+      return fromList;
+    }
+    // リストに該当の記事がなければ、activeEntryDataをそのまま返す
+    return activeEntryData;
+  }, [activeEntryId, entriesQuery.data?.entries, activeEntryData]);
 
   return (
     <div className="flex h-screen overflow-hidden">
@@ -163,6 +181,7 @@ export function HomeClient() {
           activeEntryId={activeEntryId}
           onSelectEntry={(entry) => {
             setActiveEntryId(entry.id);
+            setActiveEntryData(entry);
             if (!entry.isRead) {
               entryActionMutation.mutate({ entryId: entry.id, action: "read" });
             }
