@@ -16,7 +16,6 @@ export async function POST(request: NextRequest) {
     const result = await useCase.execute({
       userId,
       url: body.url,
-      folderId: body.folderId ?? null,
     });
 
     return NextResponse.json(result, { status: 201 });

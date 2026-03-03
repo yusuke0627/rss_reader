@@ -1,7 +1,7 @@
 "use client";
 
 import { useFeedFormStore } from "@/interface/ui/stores/feed-form-store";
-import { Plus, Trash2, Library, Folder, Rss, Loader2 } from "lucide-react";
+import { Plus, Trash2, Library, Rss, Loader2 } from "lucide-react";
 
 interface SidebarProps {
   activeView: "home" | "discover";
@@ -86,30 +86,7 @@ export function Sidebar({ activeView, onViewChange, onAddFeed, isAdding, onClear
         {/* Divider */}
         <div className="h-px bg-m3-outline-variant my-6 mx-2" />
 
-        {/* Categories section */}
-        <div className="mb-6">
-          <h2 className="px-4 text-sm font-medium text-m3-on-surface-variant mb-3">
-            Categories
-          </h2>
-          <div className="space-y-1">
-            {[
-              { name: "Technology", count: 24 },
-              { name: "Design", count: 8 },
-              { name: "Business", count: 15 },
-              { name: "Science", count: 42 }
-            ].map((cat) => (
-              <button key={cat.name} className="w-full flex items-center justify-between px-4 py-3 rounded-full hover:bg-m3-surface-container-highest transition-colors group m3-state-layer">
-                <div className="flex items-center gap-4 text-m3-on-surface-variant group-hover:text-m3-on-surface">
-                  <Folder size={20} />
-                  <span className="text-sm font-medium">{cat.name}</span>
-                </div>
-                <span className="text-xs font-medium text-m3-on-surface-variant">
-                  {cat.count}
-                </span>
-              </button>
-            ))}
-          </div>
-        </div>
+
       </div>
     </aside>
   );

@@ -4,7 +4,6 @@ import type { EntryRepository, SearchRepository } from "@/application/ports";
 export interface SearchEntriesInput {
   userId: string;
   feedId?: string;
-  folderId?: string;
   tagId?: string;
   unreadOnly?: boolean;
   search?: string;
@@ -29,7 +28,6 @@ export class SearchEntries {
         userId: input.userId,
         query,
         feedId: input.feedId,
-        folderId: input.folderId,
         tagId: input.tagId,
         unreadOnly: input.unreadOnly,
         limit: input.limit,
@@ -41,7 +39,6 @@ export class SearchEntries {
     return this.deps.entryRepository.listByFilter({
       userId: input.userId,
       feedId: input.feedId,
-      folderId: input.folderId,
       tagId: input.tagId,
       unreadOnly: input.unreadOnly,
       search: undefined,

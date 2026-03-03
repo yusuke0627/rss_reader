@@ -1,6 +1,5 @@
 export * from "./entry-repository";
 export * from "./feed-repository";
-export * from "./folder-repository";
 export * from "./opml-service";
 export * from "./rss-fetcher";
 export * from "./search-repository";

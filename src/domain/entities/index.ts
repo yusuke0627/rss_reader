@@ -3,7 +3,6 @@
 export * from "./entry";
 export * from "./entry-tag";
 export * from "./feed";
-export * from "./folder";
 export * from "./public-profile";
 export * from "./subscription";
 export * from "./tag";

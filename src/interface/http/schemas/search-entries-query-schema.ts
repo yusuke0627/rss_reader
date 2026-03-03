@@ -13,7 +13,6 @@ const unreadSchema = z
 
 export const searchEntriesQuerySchema = z.object({
   feedId: z.string().uuid().optional(),
-  folderId: z.string().uuid().optional(),
   tagId: z.string().uuid().optional(),
   unread: unreadSchema,
   search: z
