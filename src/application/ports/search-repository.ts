@@ -5,7 +5,6 @@ export interface SearchEntriesInput {
   userId: string;
   query: string;
   feedId?: string;
-  folderId?: string;
   tagId?: string;
   unreadOnly?: boolean;
   limit?: number;

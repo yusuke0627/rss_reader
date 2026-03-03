@@ -50,7 +50,6 @@ describe("SearchEntries UseCase", () => {
     const input = {
       userId: "user-1",
       search: "React", // UseCase の入力は search
-      folderId: "folder-1",
       unreadOnly: true,
       limit: 20,
     };
@@ -62,7 +61,6 @@ describe("SearchEntries UseCase", () => {
     expect(deps.searchRepository.searchEntries).toHaveBeenCalledWith({
       userId: input.userId,
       query: "React",
-      folderId: input.folderId,
       unreadOnly: input.unreadOnly,
       limit: input.limit,
       feedId: undefined,
@@ -93,7 +91,6 @@ describe("SearchEntries UseCase", () => {
       search: undefined,
       unreadOnly: false,
       feedId: undefined,
-      folderId: undefined,
       tagId: undefined,
       limit: undefined,
       cursor: undefined,

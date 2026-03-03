@@ -1,7 +1,6 @@
 import type { Feed } from "@/domain/entities";
 import type {
   FeedRepository,
-  FolderRepository,
   OpmlService,
 } from "@/application/ports";
 
@@ -17,7 +16,6 @@ export interface ImportOpmlResult {
 export interface ImportOpmlDependencies {
   opmlService: OpmlService;
   feedRepository: FeedRepository;
-  folderRepository: FolderRepository;
 }
 
 export class ImportOpml {
@@ -32,13 +30,6 @@ export class ImportOpml {
       return { importedCount: 0 };
     }
 
-    // Load available folders for the user
-    const existingFolders = await this.deps.folderRepository.listByUserId(
-      input.userId,
-    );
-    const folderCache = new Map<string, string>(); // name -> id
-    existingFolders.forEach((f) => folderCache.set(f.name, f.id));
-
     let importedCount = 0;
 
     // 2. Process each subscription
@@ -46,23 +37,6 @@ export class ImportOpml {
       if (!sub.xmlUrl) continue;
 
       try {
-        // Resolve or create folder
-        let folderId: string | null = null;
-        // フォルダ名がある
-        if (sub.folderName) {
-          // そのフォルダがすでに存在していれば再利用
-          if (folderCache.has(sub.folderName)) {
-            folderId = folderCache.get(sub.folderName) || null;
-            //　新たなフォルダならば新規作成
-          } else {
-            const newFolder = await this.deps.folderRepository.create({
-              userId: input.userId,
-              name: sub.folderName,
-            });
-            folderCache.set(newFolder.name, newFolder.id);
-            folderId = newFolder.id;
-          }
-        }
 
         // Get or Create Feed
         let feed: Feed | null = await this.deps.feedRepository.findByUrl(
@@ -81,7 +55,6 @@ export class ImportOpml {
         await this.deps.feedRepository.createSubscription({
           userId: input.userId,
           feedId: feed.id,
-          folderId, // folderが存在しなければNull
         });
 
         importedCount++;

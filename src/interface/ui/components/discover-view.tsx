@@ -54,14 +54,13 @@ export function DiscoverView({ onSubscribe, subscribingUrl, subscribedUrls }: Di
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {group.feeds.map((feed, feedIdx) => (
+              {group.feeds.map((feed) => (
                 <DiscoverCard
                   key={feed.url}
                   feed={feed}
                   onSubscribe={() => onSubscribe(feed.url)}
                   isSubscribing={subscribingUrl === feed.url}
                   isSubscribed={subscribedUrls.has(feed.url)}
-                  index={feedIdx}
                 />
               ))}
             </div>
@@ -76,14 +75,12 @@ function DiscoverCard({
   feed,
   onSubscribe,
   isSubscribing,
-  isSubscribed,
-  index
+  isSubscribed
 }: {
   feed: DiscoverFeed;
   onSubscribe: () => void;
   isSubscribing: boolean;
   isSubscribed: boolean;
-  index: number;
 }) {
   const hostname = useMemo(() => {
     try {
@@ -133,10 +130,10 @@ function DiscoverCard({
           onClick={onSubscribe}
           disabled={isSubscribing || isSubscribed}
           className={`flex items-center gap-2 px-6 py-2.5 rounded-full text-sm font-bold transition-all duration-300 ${isSubscribed
-              ? "bg-m3-surface-container-highest text-m3-primary border border-m3-primary/20"
-              : isSubscribing
-                ? "bg-m3-surface-container-highest text-m3-on-surface-variant cursor-not-allowed"
-                : "bg-m3-primary text-m3-on-primary hover:bg-m3-primary/90 hover:shadow-lg active:scale-95 shadow-sm"
+            ? "bg-m3-surface-container-highest text-m3-primary border border-m3-primary/20"
+            : isSubscribing
+              ? "bg-m3-surface-container-highest text-m3-on-surface-variant cursor-not-allowed"
+              : "bg-m3-primary text-m3-on-primary hover:bg-m3-primary/90 hover:shadow-lg active:scale-95 shadow-sm"
             }`}
         >
           {isSubscribed ? (

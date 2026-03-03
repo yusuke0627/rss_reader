@@ -9,7 +9,6 @@ import type {
 export interface RegisterFeedInput {
   userId: string;
   url: string;
-  folderId?: string | null;
 }
 
 export interface RegisterFeedResult {
@@ -92,7 +91,6 @@ export class RegisterFeed {
     const subscription = await this.deps.feedRepository.createSubscription({
       userId: input.userId,
       feedId: feed.id,
-      folderId: input.folderId ?? null,
     });
 
     return {

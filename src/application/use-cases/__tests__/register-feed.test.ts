@@ -60,7 +60,6 @@ const fakeSubscription: Subscription = {
   id: "sub-1",
   userId: "user-1",
   feedId: "feed-1",
-  folderId: null,
   createdAt: new Date(),
 };
 

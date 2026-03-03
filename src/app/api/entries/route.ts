@@ -18,7 +18,6 @@ export async function GET(request: NextRequest) {
     const entries = await useCase.execute({
       userId,
       feedId: query.feedId,
-      folderId: query.folderId,
       tagId: query.tagId,
       unreadOnly: query.unread,
       search: query.search,

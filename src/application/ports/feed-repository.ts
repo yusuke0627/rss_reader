@@ -24,14 +24,9 @@ export interface FeedRepository {
   createSubscription(input: {
     userId: string;
     feedId: string;
-    folderId?: string | null;
   }): Promise<Subscription>;
   deleteSubscription(input: { userId: string; feedId: string }): Promise<void>;
-  updateSubscriptionFolder(input: {
-    userId: string;
-    feedId: string;
-    folderId: string | null;
-  }): Promise<void>;
+
   listStaleFeeds(limit: number): Promise<Feed[]>;
   updateFetchMetadata(input: UpsertFeedMetadataInput): Promise<void>;
 }
