@@ -6,9 +6,14 @@ import { useFeedFormStore } from "@/interface/ui/stores/feed-form-store";
 import { Sidebar } from "./sidebar";
 import { EntryList, type EntryItemType } from "./entry-list";
 import { EntryDetail } from "./entry-detail";
+import { DiscoverView } from "./discover-view";
 
 interface EntriesResponse {
   entries: EntryItemType[];
+}
+
+interface FeedsResponse {
+  feeds: { url: string }[];
 }
 
 class UnauthorizedApiError extends Error {
@@ -37,6 +42,13 @@ async function fetchEntries(input: {
     throw new Error(body.error ?? "Failed to fetch entries");
   }
   return response.json() as Promise<EntriesResponse>;
+}
+
+async function fetchFeeds(): Promise<FeedsResponse> {
+  const response = await fetch("/api/feeds");
+  if (response.status === 401) throw new UnauthorizedApiError();
+  if (!response.ok) throw new Error("Failed to fetch feeds");
+  return response.json() as Promise<FeedsResponse>;
 }
 
 async function createFeed(url: string): Promise<void> {
@@ -80,6 +92,7 @@ export function HomeClient() {
 
   const [search, setSearch] = useState("");
   const [unreadOnly, setUnreadOnly] = useState(false);
+  const [activeView, setActiveView] = useState<"home" | "discover">("home");
   const [activeEntryId, setActiveEntryId] = useState<string | null>(null);
 
   // 選択中の記事データを個別に保持します。これにより、左側のリストからフィルター（「未読のみ」など）によって
@@ -91,12 +104,25 @@ export function HomeClient() {
     queryFn: () => fetchEntries({ unreadOnly, search }),
   });
 
+  const feedsQuery = useQuery({
+    queryKey: ["feeds"],
+    queryFn: fetchFeeds,
+    enabled: activeView === "discover",
+  });
+
+  const subscribedUrls = useMemo(() => {
+    return new Set(feedsQuery.data?.feeds.map((f) => f.url) || []);
+  }, [feedsQuery.data?.feeds]);
+
   const createFeedMutation = useMutation({
     mutationFn: createFeed,
     onSuccess: async () => {
       clearErrorMessages();
       clear();
-      await queryClient.invalidateQueries({ queryKey: ["entries"] });
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["entries"] }),
+        queryClient.invalidateQueries({ queryKey: ["feeds"] }),
+      ]);
     },
   });
 
@@ -167,51 +193,77 @@ export function HomeClient() {
       {/* 1. Left Sidebar Navigation */}
       <div className="flex-shrink-0">
         <Sidebar
+          activeView={activeView}
+          onViewChange={(view) => {
+            setActiveView(view);
+            if (view === "discover") {
+              setActiveEntryId(null);
+            }
+          }}
           onAddFeed={(url) => createFeedMutation.mutate(url)}
           isAdding={createFeedMutation.isPending}
           onClear={clear}
         />
       </div>
 
-      {/* 2. Middle Article List */}
-      <div className="w-[400px] flex-shrink-0 flex flex-col h-full relative">
-        <EntryList
-          entries={entriesQuery.data?.entries || []}
-          isLoading={entriesQuery.isLoading}
-          activeEntryId={activeEntryId}
-          onSelectEntry={(entry) => {
-            setActiveEntryId(entry.id);
-            setActiveEntryData(entry);
-            if (!entry.isRead) {
-              entryActionMutation.mutate({ entryId: entry.id, action: "read" });
-            }
-          }}
-          search={search}
-          onSearchChange={setSearch}
-          unreadOnly={unreadOnly}
-          onUnreadOnlyChange={setUnreadOnly}
-          onRefresh={() => entriesQuery.refetch()}
-        />
-      </div>
-
-      {/* 3. Right Article Details */}
-      <div className="flex-1 min-w-0 flex flex-col h-full relative">
-        {errorMessage && (
-          <div className="absolute top-4 right-4 z-50 w-full max-w-sm rounded-2xl p-4 shadow-lg flex justify-between items-start m3-state-layer bg-m3-error-container text-m3-on-error-container">
-            <span className="text-sm font-medium">{errorMessage}</span>
-            <button onClick={clearErrorMessages} className="text-m3-on-error-container/70 hover:text-m3-on-error-container ml-3 p-1 rounded-full m3-state-layer">
-              ✕
-            </button>
+      {activeView === "home" ? (
+        <>
+          {/* 2. Middle Article List */}
+          <div className="w-[420px] shrink-0 h-full border-r border-m3-outline-variant">
+            <EntryList
+              entries={entriesQuery.data?.entries || []}
+              isLoading={entriesQuery.isLoading}
+              activeEntryId={activeEntryId}
+              onSelectEntry={(entry) => {
+                setActiveEntryId(entry.id);
+                setActiveEntryData(entry);
+                if (!entry.isRead) {
+                  entryActionMutation.mutate({ entryId: entry.id, action: "read" });
+                }
+              }}
+              search={search}
+              onSearchChange={setSearch}
+              unreadOnly={unreadOnly}
+              onUnreadOnlyChange={setUnreadOnly}
+              onRefresh={() => entriesQuery.refetch()}
+            />
           </div>
-        )}
-        <EntryDetail
-          entry={activeEntry}
-          onSummarize={(id) => summarizeMutation.mutate(id)}
-          isSummarizePending={summarizeMutation.isPending}
-          onAction={(id, action) => entryActionMutation.mutate({ entryId: id, action })}
-          isActionPending={entryActionMutation.isPending}
-        />
-      </div>
+
+          {/* 3. Right Article Details */}
+          <div className="flex-1 min-w-0 flex flex-col h-full relative">
+            {errorMessage && (
+              <div className="absolute top-4 right-4 z-50 w-full max-w-sm rounded-2xl p-4 shadow-lg flex justify-between items-start m3-state-layer bg-m3-error-container text-m3-on-error-container">
+                <span className="text-sm font-medium">{errorMessage}</span>
+                <button
+                  onClick={clearErrorMessages}
+                  className="text-m3-on-error-container/70 hover:text-m3-on-error-container ml-3 p-1 rounded-full m3-state-layer"
+                >
+                  ✕
+                </button>
+              </div>
+            )}
+            <EntryDetail
+              entry={activeEntry}
+              onSummarize={(id) => summarizeMutation.mutate(id)}
+              isSummarizePending={summarizeMutation.isPending}
+              onAction={(id, action) =>
+                entryActionMutation.mutate({ entryId: id, action })
+              }
+              isActionPending={entryActionMutation.isPending}
+            />
+          </div>
+        </>
+      ) : (
+        <div className="flex-1 min-w-0 bg-m3-surface overflow-auto">
+          <DiscoverView
+            onSubscribe={(url) => createFeedMutation.mutate(url)}
+            subscribingUrl={
+              createFeedMutation.isPending ? createFeedMutation.variables : null
+            }
+            subscribedUrls={subscribedUrls}
+          />
+        </div>
+      )}
     </div>
   );
 }

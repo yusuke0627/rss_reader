@@ -4,23 +4,28 @@ import { useFeedFormStore } from "@/interface/ui/stores/feed-form-store";
 import { Plus, Trash2, Library, Folder, Rss, Loader2 } from "lucide-react";
 
 interface SidebarProps {
+  activeView: "home" | "discover";
+  onViewChange: (view: "home" | "discover") => void;
   onAddFeed: (url: string) => void;
   isAdding: boolean;
   onClear: () => void;
 }
 
-export function Sidebar({ onAddFeed, isAdding, onClear }: SidebarProps) {
+export function Sidebar({ activeView, onViewChange, onAddFeed, isAdding, onClear }: SidebarProps) {
   const { draftUrl, setDraftUrl } = useFeedFormStore();
 
   return (
     <aside className="w-80 flex flex-col h-full bg-m3-surface-container border-r border-m3-outline-variant transition-colors text-m3-on-surface">
       <div className="p-6">
         {/* Navigation Drawer Header */}
-        <div className="flex items-center gap-4 mb-8">
-          <div className="w-10 h-10 rounded-full flex items-center justify-center bg-m3-primary-container text-m3-on-primary-container shadow-sm">
+        <div
+          onClick={() => onViewChange("home")}
+          className="flex items-center gap-4 mb-8 cursor-pointer group/logo"
+        >
+          <div className="w-10 h-10 rounded-full flex items-center justify-center bg-m3-primary-container text-m3-on-primary-container shadow-sm group-hover/logo:bg-m3-primary group-hover/logo:text-m3-on-primary transition-colors">
             <Rss size={20} />
           </div>
-          <h1 className="text-xl font-medium tracking-tight">Lumina RSS</h1>
+          <h1 className="text-xl font-medium tracking-tight group-hover/logo:text-m3-primary transition-colors">Lumina Reader</h1>
         </div>
 
         {/* Floating Action Button (FAB) Style for Add */}
@@ -56,11 +61,23 @@ export function Sidebar({ onAddFeed, isAdding, onClear }: SidebarProps) {
 
         {/* Navigation Rail / Drawer Items */}
         <nav className="space-y-1">
-          <button className="w-full flex items-center gap-4 px-4 py-3 rounded-full bg-m3-secondary-container text-m3-on-secondary-container font-medium m3-state-layer">
+          <button
+            onClick={() => onViewChange("home")}
+            className={`w-full flex items-center gap-4 px-4 py-3 rounded-full font-medium m3-state-layer transition-colors ${activeView === "home"
+              ? "bg-m3-secondary-container text-m3-on-secondary-container"
+              : "text-m3-on-surface-variant hover:bg-m3-surface-container-highest"
+              }`}
+          >
             <Library size={20} />
             All Feeds
           </button>
-          <button className="w-full flex items-center gap-4 px-4 py-3 rounded-full hover:bg-m3-surface-container-highest text-m3-on-surface-variant font-medium m3-state-layer">
+          <button
+            onClick={() => onViewChange("discover")}
+            className={`w-full flex items-center gap-4 px-4 py-3 rounded-full font-medium m3-state-layer transition-colors ${activeView === "discover"
+              ? "bg-m3-secondary-container text-m3-on-secondary-container"
+              : "text-m3-on-surface-variant hover:bg-m3-surface-container-highest"
+              }`}
+          >
             <Plus size={20} />
             Discover
           </button>
