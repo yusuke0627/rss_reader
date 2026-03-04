@@ -135,8 +135,6 @@ async function deleteFeedAction(feedId: string): Promise<void> {
   if (!response.ok) throw new Error("Failed to unsubscribe feed");
 }
 
-}
-
 async function postSummarize(entryId: string) {
   const response = await fetch(`/api/entries/${entryId}/summarize`, { method: "POST" });
   if (response.status === 401) throw new UnauthorizedApiError();
@@ -286,7 +284,16 @@ export function HomeClient() {
     addTagMutation.reset();
     removeTagMutation.reset();
     unsubscribeMutation.reset();
+  };
 
+  const errorMessage = useMemo(() => {
+    if (entriesQuery.error && !(entriesQuery.error instanceof UnauthorizedApiError)) return entriesQuery.error.message;
+    if (tagsQuery.error && !(tagsQuery.error instanceof UnauthorizedApiError)) return tagsQuery.error.message;
+    if (createFeedMutation.error && !(createFeedMutation.error instanceof UnauthorizedApiError)) return createFeedMutation.error.message;
+    if (entryActionMutation.error && !(entryActionMutation.error instanceof UnauthorizedApiError)) return entryActionMutation.error.message;
+    if (summarizeMutation.error && !(summarizeMutation.error instanceof UnauthorizedApiError)) return summarizeMutation.error.message;
+    if (createTagMutation.error && !(createTagMutation.error instanceof UnauthorizedApiError)) return createTagMutation.error.message;
+    if (deleteTagMutation.error && !(deleteTagMutation.error instanceof UnauthorizedApiError)) return deleteTagMutation.error.message;
     if (unsubscribeMutation.error && !(unsubscribeMutation.error instanceof UnauthorizedApiError)) return unsubscribeMutation.error.message;
     return null;
   }, [
