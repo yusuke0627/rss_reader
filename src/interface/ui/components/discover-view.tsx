@@ -55,7 +55,7 @@ export function DiscoverView({ onSubscribe, onUnsubscribe, subscribingUrl, subsc
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {group.feeds.map((feed, feedIdx) => (
+              {group.feeds.map((feed) => (
                 <DiscoverCard
                   key={feed.url}
                   feed={feed}
@@ -63,7 +63,6 @@ export function DiscoverView({ onSubscribe, onUnsubscribe, subscribingUrl, subsc
                   onUnsubscribe={() => onUnsubscribe(feed.url)}
                   isSubscribing={subscribingUrl === feed.url}
                   isSubscribed={subscribedUrls.has(feed.url)}
-                  index={feedIdx}
                 />
               ))}
             </div>
@@ -80,14 +79,12 @@ function DiscoverCard({
   onUnsubscribe,
   isSubscribing,
   isSubscribed,
-  index
 }: {
   feed: DiscoverFeed;
   onSubscribe: () => void;
   onUnsubscribe: () => void;
   isSubscribing: boolean;
   isSubscribed: boolean;
-  index: number;
 }) {
   const [isHovered, setIsHovered] = useState(false);
   const hostname = useMemo(() => {
@@ -140,19 +137,13 @@ function DiscoverCard({
           onMouseLeave={() => setIsHovered(false)}
           disabled={isSubscribing}
           className={`flex items-center gap-2 px-6 py-2.5 rounded-full text-sm font-bold transition-all duration-300 ${isSubscribed
-<<<<<<< Updated upstream
-              ? "bg-m3-surface-container-highest text-m3-primary border border-m3-primary/20"
-              : isSubscribing
-                ? "bg-m3-surface-container-highest text-m3-on-surface-variant cursor-not-allowed"
-                : "bg-m3-primary text-m3-on-primary hover:bg-m3-primary/90 hover:shadow-lg active:scale-95 shadow-sm"
-=======
             ? isHovered
               ? "bg-m3-error-container text-m3-on-error-container border border-m3-error"
               : "bg-m3-surface-container-highest text-m3-primary border border-m3-primary/20"
             : isSubscribing
               ? "bg-m3-surface-container-highest text-m3-on-surface-variant cursor-not-allowed"
               : "bg-m3-primary text-m3-on-primary hover:bg-m3-primary/90 hover:shadow-lg active:scale-95 shadow-sm"
->>>>>>> Stashed changes
+
             }`}
         >
           {isSubscribed ? (

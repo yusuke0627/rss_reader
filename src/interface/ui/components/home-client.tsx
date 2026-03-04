@@ -73,31 +73,12 @@ async function postEntryAction(entryId: string, action: "read" | "unread" | "boo
   }
 }
 
-<<<<<<< Updated upstream
-=======
-async function addTagToEntryAction(entryId: string, tagId: string): Promise<void> {
-  const response = await fetch(`/api/entries/${entryId}/tags`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ tagId }),
-  });
-  if (response.status === 401) throw new UnauthorizedApiError();
-  if (!response.ok) throw new Error("Failed to add tag to entry");
-}
-
-async function removeTagFromEntryAction(entryId: string, tagId: string): Promise<void> {
-  const response = await fetch(`/api/entries/${entryId}/tags/${tagId}`, { method: "DELETE" });
-  if (response.status === 401) throw new UnauthorizedApiError();
-  if (!response.ok) throw new Error("Failed to remove tag from entry");
-}
-
 async function deleteFeedAction(feedId: string): Promise<void> {
   const response = await fetch(`/api/feeds/${feedId}`, { method: "DELETE" });
   if (response.status === 401) throw new UnauthorizedApiError();
   if (!response.ok) throw new Error("Failed to unsubscribe feed");
 }
 
->>>>>>> Stashed changes
 async function postSummarize(entryId: string) {
   const response = await fetch(`/api/entries/${entryId}/summarize`, { method: "POST" });
   if (response.status === 401) throw new UnauthorizedApiError();
@@ -195,40 +176,24 @@ export function HomeClient() {
     createFeedMutation.reset();
     entryActionMutation.reset();
     summarizeMutation.reset();
-<<<<<<< Updated upstream
-=======
-    createTagMutation.reset();
-    deleteTagMutation.reset();
-    addTagMutation.reset();
-    removeTagMutation.reset();
     unsubscribeMutation.reset();
->>>>>>> Stashed changes
   };
 
   const errorMessage = useMemo(() => {
-    if (entriesQuery.error && !(entriesQuery.error instanceof UnauthorizedApiError)) return entriesQuery.error.message;
-    if (createFeedMutation.error && !(createFeedMutation.error instanceof UnauthorizedApiError)) return createFeedMutation.error.message;
-    if (entryActionMutation.error && !(entryActionMutation.error instanceof UnauthorizedApiError)) return entryActionMutation.error.message;
-    if (summarizeMutation.error && !(summarizeMutation.error instanceof UnauthorizedApiError)) return summarizeMutation.error.message;
-<<<<<<< Updated upstream
-    return null;
-  }, [createFeedMutation.error, entriesQuery.error, entryActionMutation.error, summarizeMutation.error]);
-=======
-    if (createTagMutation.error && !(createTagMutation.error instanceof UnauthorizedApiError)) return createTagMutation.error.message;
-    if (deleteTagMutation.error && !(deleteTagMutation.error instanceof UnauthorizedApiError)) return deleteTagMutation.error.message;
-    if (unsubscribeMutation.error && !(unsubscribeMutation.error instanceof UnauthorizedApiError)) return unsubscribeMutation.error.message;
+    if (createFeedMutation.error) return createFeedMutation.error.message;
+    if (entriesQuery.error) return entriesQuery.error.message;
+    if (entryActionMutation.error) return entryActionMutation.error.message;
+    if (summarizeMutation.error) return summarizeMutation.error.message;
+    if (unsubscribeMutation.error) return unsubscribeMutation.error.message;
     return null;
   }, [
     createFeedMutation.error,
     entriesQuery.error,
     entryActionMutation.error,
     summarizeMutation.error,
-    tagsQuery.error,
-    createTagMutation.error,
-    deleteTagMutation.error,
     unsubscribeMutation.error,
   ]);
->>>>>>> Stashed changes
+
 
   // リストが更新された際、現在選択中の記事のステータスを最新に保つためにデータを更新します。
   // ただし、フィルター(「未読のみ」等)の影響でリストから消えた場合は、既存のデータを保持して右枠の表示を維持します。
