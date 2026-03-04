@@ -20,8 +20,6 @@ Whether you are a casual reader or a power user following hundreds of tech blogs
 - 🔍 **Discover New Content**: Don't know what to read? Our curated 'Discover' section helps you find and subscribe to top-tier feeds across tech, design, and news.
 - 📱 **Fully Responsive**: A seamless experience reading from your desktop monitor down to your mobile phone.
 
-*(To Recruiters: This project demonstrates a strong command of modern React, Next.js App Router, state management, and edge-ready database integration, all wrapped in a highly polished UX.)*
-
 ---
 
 ## 🛠 For Developers
