@@ -1,10 +1,5 @@
 # ✨ Lumina Reader
 
-<div align="center">
-  <img src="https://github.com/yusuke0627/rss_reader/blob/main/.github/assets/demo.webp?raw=true" alt="Lumina Reader Demo" width="800"/>
-  <p><strong>A beautifully crafted, AI-powered RSS Reader for the modern web.</strong></p>
-</div>
-
 ---
 
 ## 🌟 For People (Overview & Features)
