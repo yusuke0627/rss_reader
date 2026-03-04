@@ -13,7 +13,7 @@ interface EntriesResponse {
 }
 
 interface FeedsResponse {
-  feeds: { url: string }[];
+  feeds: { id: string, url: string }[];
 }
 
 export interface Tag {
@@ -129,6 +129,12 @@ async function removeTagFromEntryAction(entryId: string, tagId: string): Promise
   if (!response.ok) throw new Error("Failed to remove tag from entry");
 }
 
+async function deleteFeedAction(feedId: string): Promise<void> {
+  const response = await fetch(`/api/feeds/${feedId}`, { method: "DELETE" });
+  if (response.status === 401) throw new UnauthorizedApiError();
+  if (!response.ok) throw new Error("Failed to unsubscribe feed");
+}
+
 async function postSummarize(entryId: string) {
   const response = await fetch(`/api/entries/${entryId}/summarize`, { method: "POST" });
   if (response.status === 401) throw new UnauthorizedApiError();
@@ -184,6 +190,17 @@ export function HomeClient() {
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: ["entries"] }),
         queryClient.invalidateQueries({ queryKey: ["feeds"] }),
+      ]);
+    },
+  });
+
+  const unsubscribeMutation = useMutation({
+    mutationFn: deleteFeedAction,
+    onSuccess: async () => {
+      clearErrorMessages();
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["feeds"] }),
+        queryClient.invalidateQueries({ queryKey: ["entries"] }),
       ]);
     },
   });
@@ -266,6 +283,7 @@ export function HomeClient() {
     deleteTagMutation.reset();
     addTagMutation.reset();
     removeTagMutation.reset();
+    unsubscribeMutation.reset();
   };
 
   const errorMessage = useMemo(() => {
@@ -276,6 +294,7 @@ export function HomeClient() {
     if (summarizeMutation.error && !(summarizeMutation.error instanceof UnauthorizedApiError)) return summarizeMutation.error.message;
     if (createTagMutation.error && !(createTagMutation.error instanceof UnauthorizedApiError)) return createTagMutation.error.message;
     if (deleteTagMutation.error && !(deleteTagMutation.error instanceof UnauthorizedApiError)) return deleteTagMutation.error.message;
+    if (unsubscribeMutation.error && !(unsubscribeMutation.error instanceof UnauthorizedApiError)) return unsubscribeMutation.error.message;
     return null;
   }, [
     createFeedMutation.error,
@@ -285,7 +304,9 @@ export function HomeClient() {
     tagsQuery.error,
     createTagMutation.error,
     deleteTagMutation.error,
+    unsubscribeMutation.error,
   ]);
+
 
   // リストが更新された際、現在選択中の記事のステータスを最新に保つためにデータを更新します。
   // ただし、フィルター(「未読のみ」等)の影響でリストから消えた場合は、既存のデータを保持して右枠の表示を維持します。
@@ -396,6 +417,12 @@ export function HomeClient() {
         <div className="flex-1 min-w-0 bg-m3-surface overflow-auto">
           <DiscoverView
             onSubscribe={(url) => createFeedMutation.mutate(url)}
+            onUnsubscribe={(url) => {
+              const feed = feedsQuery.data?.feeds.find(f => f.url === url);
+              if (feed) {
+                unsubscribeMutation.mutate(feed.id);
+              }
+            }}
             subscribingUrl={
               createFeedMutation.isPending ? createFeedMutation.variables : null
             }

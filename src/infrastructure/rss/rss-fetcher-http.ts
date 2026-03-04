@@ -64,7 +64,7 @@ export class RssFetcherHttp implements RssFetcher {
     );
     headers.set(
       "User-Agent",
-      "rss-reader/0.1 (+https://github.com/yusuke0627/rss_reader)",
+      "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36 (compatible; RSS Reader; +https://github.com/yusuke0627/rss_reader)"
     );
     headers.set("Accept-Language", "ja,en-US;q=0.8,en;q=0.6");
     if (input.etag) {

@@ -15,3 +15,4 @@ export * from "./delete-tag";
 export * from "./get-entries-by-tag";
 export * from "./remove-tag-from-entry";
 export * from "./list-feeds";
+export * from "./unsubscribe-feed";
