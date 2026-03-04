@@ -20,6 +20,7 @@ export const searchEntriesQuerySchema = z.object({
     .trim()
     .optional()
     .transform((value) => (value && value.length > 0 ? value : undefined)),
+  unreadOnly: z.preprocess((v) => v === "true", z.boolean()).default(false),
   limit: z.coerce.number().int().min(1).max(200).optional().default(50),
   cursor: z.string().optional(),
 });

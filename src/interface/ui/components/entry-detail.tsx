@@ -4,9 +4,12 @@ import { motion } from "framer-motion";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import rehypeRaw from "rehype-raw";
-import { Sparkles, Loader2, ExternalLink, Bookmark, FileText } from "lucide-react";
+import { CheckCircle2 } from "lucide-react";
+import { Sparkles, Loader2, ExternalLink, Bookmark, FileText, Tag as TagIcon, X } from "lucide-react";
 import type { EntryItemType } from "./entry-list";
+import type { Tag } from "./home-client";
 import { format } from "date-fns";
+import { useState } from "react";
 
 interface EntryDetailProps {
   entry: EntryItemType | null;
@@ -14,6 +17,10 @@ interface EntryDetailProps {
   isSummarizePending: boolean;
   onAction: (id: string, action: "read" | "unread" | "bookmark" | "unbookmark") => void;
   isActionPending: boolean;
+  availableTags: Tag[];
+  onAddTag: (entryId: string, tagId: string) => void;
+  onRemoveTag: (entryId: string, tagId: string) => void;
+  isTagActionPending: boolean;
 }
 
 const SummarySkeleton = () => (
@@ -37,7 +44,12 @@ export function EntryDetail({
   isSummarizePending,
   onAction,
   isActionPending,
+  availableTags,
+  onAddTag,
+  onRemoveTag,
+  isTagActionPending,
 }: EntryDetailProps) {
+  const [isTagMenuOpen, setIsTagMenuOpen] = useState(false);
   if (!entry) {
     return (
       <div className="flex-1 flex flex-col items-center justify-center text-m3-on-surface-variant bg-m3-surface h-full">
@@ -82,10 +94,86 @@ export function EntryDetail({
             <h1 className="text-4xl font-normal text-m3-on-surface leading-[1.15] mb-6 tracking-tight">
               {safeTitle}
             </h1>
-            <div className="flex items-center gap-3 text-sm font-medium text-m3-on-surface-variant">
+            <div className="flex items-center gap-3 text-sm font-medium text-m3-on-surface-variant flex-wrap">
               <span className="text-m3-primary">{safeAuthor}</span>
               <span>•</span>
               <span>{dateFormated}</span>
+
+              {/* Tag Display & Assignment */}
+              {entry.tags && entry.tags.length > 0 && (
+                <>
+                  <span>•</span>
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    {entry.tags.map(tag => (
+                      <div key={tag.id} className="flex items-center bg-m3-secondary-container/60 text-m3-on-secondary-container px-2.5 py-1 rounded-full text-xs font-semibold group relative border border-m3-outline-variant/30 hover:bg-m3-secondary-container transition-colors shadow-sm">
+                        <span>{tag.name}</span>
+                        <button
+                          onClick={() => onRemoveTag(entry.id, tag.id)}
+                          className="ml-1.5 -mr-1 p-0.5 rounded-full hover:bg-m3-on-secondary-container/20 transition-colors opacity-0 group-hover:opacity-100 flex items-center justify-center bg-m3-secondary-container/50"
+                          disabled={isTagActionPending}
+                          title="Remove Tag"
+                        >
+                          <X size={12} />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </>
+              )}
+            </div>
+
+            <div className="mt-6 flex items-center gap-4">
+              <div className="relative inline-block">
+                <button
+                  onClick={() => setIsTagMenuOpen(!isTagMenuOpen)}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold m3-state-layer transition-all shadow-sm ${isTagMenuOpen
+                    ? "bg-m3-primary text-m3-on-primary"
+                    : "bg-m3-tertiary-container text-m3-on-tertiary-container hover:bg-m3-tertiary-container/80 hover:shadow-md active:scale-95"
+                    }`}
+                  disabled={isTagActionPending}
+                >
+                  {isTagActionPending ? (
+                    <Loader2 size={16} className="animate-spin" />
+                  ) : (
+                    <>
+                      <TagIcon size={16} />
+                      <span>{entry.tags && entry.tags.length > 0 ? "Edit Tags" : "Add Tags"}</span>
+                    </>
+                  )}
+                </button>
+
+                {isTagMenuOpen && (
+                  <div className="absolute top-full left-0 mt-1 w-48 bg-m3-surface-container-high border border-m3-outline-variant/30 rounded-xl shadow-lg z-20 py-1 max-h-48 overflow-y-auto custom-scrollbar">
+                    {availableTags.length === 0 ? (
+                      <div className="px-3 py-2 text-xs text-m3-on-surface-variant italic">No tags created yet.</div>
+                    ) : (
+                      availableTags.map(tag => {
+                        const isAssigned = entry.tags?.some(t => t.id === tag.id);
+                        return (
+                          <button
+                            key={tag.id}
+                            onClick={() => {
+                              if (isAssigned) {
+                                onRemoveTag(entry.id, tag.id);
+                              } else {
+                                onAddTag(entry.id, tag.id);
+                              }
+                              setIsTagMenuOpen(false);
+                            }}
+                            className={`w-full text-left px-3 py-2 text-sm transition-colors flex items-center justify-between ${isAssigned
+                              ? "bg-m3-primary/10 text-m3-primary font-medium"
+                              : "text-m3-on-surface hover:bg-m3-surface-container-highest"
+                              }`}
+                          >
+                            <span>{tag.name}</span>
+                            {isAssigned && <CheckCircle2 size={14} />}
+                          </button>
+                        );
+                      })
+                    )}
+                  </div>
+                )}
+              </div>
             </div>
           </div>
 
