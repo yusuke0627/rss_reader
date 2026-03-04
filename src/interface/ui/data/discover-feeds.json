@@ -44,10 +44,10 @@
     "category": "Design",
     "feeds": [
       {
-        "title": "Dribbble Popular",
-        "description": "世界のトップクリエイターによるデザインのインスピレーション",
-        "url": "https://dribbble.com/shots/popular.rss",
-        "iconBgColor": "bg-pink-500"
+        "title": "Design Milk",
+        "description": "Design Milk is an online magazine dedicated to modern design, architecture, art, and technology.",
+        "url": "https://design-milk.com/feed/",
+        "iconBgColor": "bg-gray-800"
       },
       {
         "title": "Awwwards",
@@ -81,13 +81,13 @@
       {
         "title": "Nippon.com",
         "description": "日本の文化、社会、ライフスタイルを深堀り（日本語）",
-        "url": "https://www.nippon.com/ja/rss.xml",
+        "url": "https://www.nippon.com/ja/feed/",
         "iconBgColor": "bg-red-600"
       },
       {
         "title": "WIRED.jp",
         "description": "未来のビジネス、カルチャー、テクノロジーの交差点",
-        "url": "https://wired.jp/feed/rss2/",
+        "url": "https://wired.jp/rssfeeder/",
         "iconBgColor": "bg-black"
       },
       {

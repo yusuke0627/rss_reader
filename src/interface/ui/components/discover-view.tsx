@@ -1,7 +1,7 @@
 "use client";
 
-import { useMemo } from "react";
-import { Plus, Rss, Loader2, Check } from "lucide-react";
+import { useMemo, useState } from "react";
+import { Plus, Rss, Loader2, Check, Trash2 } from "lucide-react";
 import { motion } from "framer-motion";
 import discoverData from "../data/discover-feeds.json";
 
@@ -19,11 +19,12 @@ interface DiscoverCategory {
 
 interface DiscoverViewProps {
   onSubscribe: (url: string) => void;
+  onUnsubscribe: (url: string) => void;
   subscribingUrl: string | null;
   subscribedUrls: Set<string>;
 }
 
-export function DiscoverView({ onSubscribe, subscribingUrl, subscribedUrls }: DiscoverViewProps) {
+export function DiscoverView({ onSubscribe, onUnsubscribe, subscribingUrl, subscribedUrls }: DiscoverViewProps) {
   const data = discoverData as DiscoverCategory[];
 
   return (
@@ -59,6 +60,7 @@ export function DiscoverView({ onSubscribe, subscribingUrl, subscribedUrls }: Di
                   key={feed.url}
                   feed={feed}
                   onSubscribe={() => onSubscribe(feed.url)}
+                  onUnsubscribe={() => onUnsubscribe(feed.url)}
                   isSubscribing={subscribingUrl === feed.url}
                   isSubscribed={subscribedUrls.has(feed.url)}
                   index={feedIdx}
@@ -75,16 +77,19 @@ export function DiscoverView({ onSubscribe, subscribingUrl, subscribedUrls }: Di
 function DiscoverCard({
   feed,
   onSubscribe,
+  onUnsubscribe,
   isSubscribing,
   isSubscribed,
   index
 }: {
   feed: DiscoverFeed;
   onSubscribe: () => void;
+  onUnsubscribe: () => void;
   isSubscribing: boolean;
   isSubscribed: boolean;
   index: number;
 }) {
+  const [isHovered, setIsHovered] = useState(false);
   const hostname = useMemo(() => {
     try {
       return new URL(feed.url).hostname;
@@ -130,20 +135,38 @@ function DiscoverCard({
 
       <div className="mt-auto flex justify-end relative z-10">
         <button
-          onClick={onSubscribe}
-          disabled={isSubscribing || isSubscribed}
+          onClick={isSubscribed ? onUnsubscribe : onSubscribe}
+          onMouseEnter={() => setIsHovered(true)}
+          onMouseLeave={() => setIsHovered(false)}
+          disabled={isSubscribing}
           className={`flex items-center gap-2 px-6 py-2.5 rounded-full text-sm font-bold transition-all duration-300 ${isSubscribed
+<<<<<<< Updated upstream
               ? "bg-m3-surface-container-highest text-m3-primary border border-m3-primary/20"
               : isSubscribing
                 ? "bg-m3-surface-container-highest text-m3-on-surface-variant cursor-not-allowed"
                 : "bg-m3-primary text-m3-on-primary hover:bg-m3-primary/90 hover:shadow-lg active:scale-95 shadow-sm"
+=======
+            ? isHovered
+              ? "bg-m3-error-container text-m3-on-error-container border border-m3-error"
+              : "bg-m3-surface-container-highest text-m3-primary border border-m3-primary/20"
+            : isSubscribing
+              ? "bg-m3-surface-container-highest text-m3-on-surface-variant cursor-not-allowed"
+              : "bg-m3-primary text-m3-on-primary hover:bg-m3-primary/90 hover:shadow-lg active:scale-95 shadow-sm"
+>>>>>>> Stashed changes
             }`}
         >
           {isSubscribed ? (
-            <>
-              <Check size={18} className="text-m3-primary" />
-              Subscribed
-            </>
+            isHovered ? (
+              <>
+                <Trash2 size={18} />
+                Unsubscribe
+              </>
+            ) : (
+              <>
+                <Check size={18} className="text-m3-primary" />
+                Subscribed
+              </>
+            )
           ) : isSubscribing ? (
             <>
               <Loader2 size={16} className="animate-spin" />
@@ -160,3 +183,4 @@ function DiscoverCard({
     </motion.div>
   );
 }
+
