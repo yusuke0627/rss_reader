@@ -2,11 +2,10 @@ import { describe, it, expect, vi } from "vitest";
 import { ImportOpml } from "../import-opml";
 import type {
   FeedRepository,
-  FolderRepository,
   OpmlService,
   ParsedOpmlSubscription,
 } from "@/application/ports";
-import type { Feed, Folder } from "@/domain/entities";
+import type { Feed } from "@/domain/entities";
 
 // ==========================================================================
 // 【テストガイドライン: ImportOpml】
@@ -36,19 +35,11 @@ function createMockDeps() {
       create: vi.fn(),
       createSubscription: vi.fn(),
     } as unknown as FeedRepository,
-    folderRepository: {
-      listByUserId: vi.fn(),
-      create: vi.fn(),
-    } as unknown as FolderRepository,
   };
 }
 
 // テスト用ダミーデータ
-const fakeFolder: Folder = {
-  id: "folder-1",
-  userId: "user-1",
-  name: "ニュース",
-};
+
 
 const fakeFeed: Feed = {
   id: "feed-1",
@@ -77,11 +68,6 @@ describe("ImportOpml UseCase", () => {
     vi.mocked(deps.opmlService.parse).mockResolvedValue(parsedSubs);
 
     // 2. リポジトリの挙動設定
-    vi.mocked(deps.folderRepository.listByUserId).mockResolvedValue([]); // 最初はフォルダなし
-    vi.mocked(deps.folderRepository.create).mockResolvedValue({
-      ...fakeFolder,
-      name: "IT",
-    });
     vi.mocked(deps.feedRepository.findByUrl).mockResolvedValue(null); // 新規フィード
     vi.mocked(deps.feedRepository.create).mockResolvedValue(fakeFeed);
 
@@ -94,75 +80,12 @@ describe("ImportOpml UseCase", () => {
     // ── Assert (検証) ──
     expect(result.importedCount).toBe(1);
 
-    // フォルダが作成されたか
-    expect(deps.folderRepository.create).toHaveBeenCalledWith(
-      expect.objectContaining({ name: "IT" }),
-    );
     // フィードと購読が作成されたか
     expect(deps.feedRepository.create).toHaveBeenCalled();
     expect(deps.feedRepository.createSubscription).toHaveBeenCalled();
   });
 
-  it("正常系: フォルダがすでに存在する場合は再利用する", async () => {
-    // ── Arrange (準備) ──
-    const deps = createMockDeps();
-    const useCase = new ImportOpml(deps);
 
-    // 1. OPMLパース結果の準備
-    const parsedSubs: ParsedOpmlSubscription[] = [
-      {
-        title: "Tech News",
-        xmlUrl: "https://tech.example.com/feed",
-        folderName: "IT",
-      },
-    ];
-
-    // すでに存在するfolder
-    const fakeFolder = {
-      id: "folder-1",
-      userId: "user-1",
-      name: "IT",
-      createdAt: new Date(),
-    };
-
-    const fakeFeed = {
-      id: "feed-1",
-      url: "https://tech.example.com/feed",
-      title: "Tech News",
-      siteUrl: "https://tech.example.com",
-      lastFetchedAt: null,
-      etag: null,
-      lastModified: null,
-    };
-
-    vi.mocked(deps.opmlService.parse).mockResolvedValue(parsedSubs);
-
-    // 2. リポジトリの挙動設定
-    vi.mocked(deps.folderRepository.listByUserId).mockResolvedValue([
-      fakeFolder,
-    ]);
-
-    vi.mocked(deps.folderRepository.create).mockResolvedValue({
-      ...fakeFolder,
-    });
-    vi.mocked(deps.feedRepository.findByUrl).mockResolvedValue(null); // 新規フィード
-    vi.mocked(deps.feedRepository.create).mockResolvedValue(fakeFeed);
-
-    // ── Act (実行) ──
-    const result = await useCase.execute({
-      userId: "user-1",
-      opmlContent: "<opml>...</opml>",
-    });
-
-    // ── Assert (検証) ──
-    expect(result.importedCount).toBe(1);
-
-    // すでに存在するフォルダを利用したか
-    expect(deps.folderRepository.create).not.toHaveBeenCalled();
-    // フィードと購読が作成された
-    expect(deps.feedRepository.create).toHaveBeenCalled();
-    expect(deps.feedRepository.createSubscription).toHaveBeenCalled();
-  });
 
   it("ロバスト性: 一部のフィード登録が失敗(createSubscriptionに失敗)しても、他の登録を続行する", async () => {
     // 「1件エラーが起きても importedCount が増えること」
@@ -175,7 +98,6 @@ describe("ImportOpml UseCase", () => {
       { title: "Success Feed", xmlUrl: "https://success.com/rss" },
     ];
     vi.mocked(deps.opmlService.parse).mockResolvedValue(parsedSubs);
-    vi.mocked(deps.folderRepository.listByUserId).mockResolvedValue([]);
     // 2. 1件目の購読作成でわざとエラーを投げる
     vi.mocked(deps.feedRepository.findByUrl).mockResolvedValue(null); //新規feed
     vi.mocked(deps.feedRepository.create).mockResolvedValue(fakeFeed);

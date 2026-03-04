@@ -5,7 +5,6 @@ import type { Entry } from "@/domain/entities";
 export interface EntryFilter {
   userId: string;
   feedId?: string;
-  folderId?: string;
   tagId?: string;
   unreadOnly?: boolean;
   bookmarkedOnly?: boolean;

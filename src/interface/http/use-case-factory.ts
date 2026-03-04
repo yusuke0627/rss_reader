@@ -75,7 +75,6 @@ export function createImportOpmlUseCase(): ImportOpml {
   return new ImportOpml({
     opmlService,
     feedRepository: repositories.feedRepository,
-    folderRepository: repositories.folderRepository,
   });
 }
 

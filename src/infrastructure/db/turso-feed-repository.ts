@@ -41,7 +41,6 @@ function mapSubscription(row: Record<string, unknown>): Subscription {
     id: asString(row.id),
     userId: asString(row.user_id),
     feedId: asString(row.feed_id),
-    folderId: asNullableString(row.folder_id),
     createdAt: asDate(row.created_at),
   };
 }
@@ -125,24 +124,22 @@ export class TursoFeedRepository implements FeedRepository {
   async createSubscription(input: {
     userId: string;
     feedId: string;
-    folderId?: string | null;
   }): Promise<Subscription> {
     const db = getTursoClient();
     const id = crypto.randomUUID();
 
     await db.execute({
       sql: `
-        INSERT INTO subscriptions (id, user_id, feed_id, folder_id, created_at)
-        VALUES (?, ?, ?, ?, ?)
-        ON CONFLICT(user_id, feed_id)
-        DO UPDATE SET folder_id = COALESCE(excluded.folder_id, subscriptions.folder_id)
+        INSERT INTO subscriptions (id, user_id, feed_id, created_at)
+        VALUES (?, ?, ?, ?)
+        ON CONFLICT(user_id, feed_id) DO NOTHING
       `,
-      args: [id, input.userId, input.feedId, input.folderId ?? null, new Date().toISOString()],
+      args: [id, input.userId, input.feedId, new Date().toISOString()],
     });
 
     const result = await db.execute({
       sql: `
-        SELECT id, user_id, feed_id, folder_id, created_at
+        SELECT id, user_id, feed_id, created_at
         FROM subscriptions
         WHERE user_id = ? AND feed_id = ?
         LIMIT 1
@@ -166,21 +163,7 @@ export class TursoFeedRepository implements FeedRepository {
     });
   }
 
-  async updateSubscriptionFolder(input: {
-    userId: string;
-    feedId: string;
-    folderId: string | null;
-  }): Promise<void> {
-    const db = getTursoClient();
-    await db.execute({
-      sql: `
-        UPDATE subscriptions
-        SET folder_id = ?
-        WHERE user_id = ? AND feed_id = ?
-      `,
-      args: [input.folderId, input.userId, input.feedId],
-    });
-  }
+
 
   async listStaleFeeds(limit: number): Promise<Feed[]> {
     const db = getTursoClient();

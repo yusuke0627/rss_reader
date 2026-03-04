@@ -19,13 +19,6 @@ CREATE TABLE IF NOT EXISTS feeds (
   last_fetched_at TEXT
 );
 
-CREATE TABLE IF NOT EXISTS folders (
-  id TEXT PRIMARY KEY,
-  user_id TEXT NOT NULL,
-  name TEXT NOT NULL,
-  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-);
-
 CREATE TABLE IF NOT EXISTS tags (
   id TEXT PRIMARY KEY,
   user_id TEXT NOT NULL,
@@ -38,12 +31,10 @@ CREATE TABLE IF NOT EXISTS subscriptions (
   id TEXT PRIMARY KEY,
   user_id TEXT NOT NULL,
   feed_id TEXT NOT NULL,
-  folder_id TEXT,
   created_at TEXT NOT NULL,
   UNIQUE(user_id, feed_id),
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-  FOREIGN KEY (feed_id) REFERENCES feeds(id) ON DELETE CASCADE,
-  FOREIGN KEY (folder_id) REFERENCES folders(id) ON DELETE SET NULL
+  FOREIGN KEY (feed_id) REFERENCES feeds(id) ON DELETE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS entries (

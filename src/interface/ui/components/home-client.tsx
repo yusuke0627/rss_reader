@@ -16,6 +16,16 @@ interface FeedsResponse {
   feeds: { id: string, url: string }[];
 }
 
+export interface Tag {
+  id: string;
+  name: string;
+  isSystem: boolean;
+}
+
+interface TagsResponse {
+  tags: Tag[];
+}
+
 class UnauthorizedApiError extends Error {
   constructor() {
     super("Unauthorized");
@@ -26,6 +36,7 @@ class UnauthorizedApiError extends Error {
 async function fetchEntries(input: {
   unreadOnly: boolean;
   search: string;
+  tagId: string | null;
 }): Promise<EntriesResponse> {
   const params = new URLSearchParams();
   if (input.unreadOnly) {
@@ -33,6 +44,9 @@ async function fetchEntries(input: {
   }
   if (input.search.trim()) {
     params.set("search", input.search.trim());
+  }
+  if (input.tagId) {
+    params.set("tagId", input.tagId);
   }
 
   const response = await fetch(`/api/entries?${params.toString()}`);
@@ -64,6 +78,32 @@ async function createFeed(url: string): Promise<void> {
   }
 }
 
+async function fetchTags(): Promise<TagsResponse> {
+  const response = await fetch("/api/tags");
+  if (response.status === 401) throw new UnauthorizedApiError();
+  if (!response.ok) throw new Error("Failed to fetch tags");
+  return response.json() as Promise<TagsResponse>;
+}
+
+async function postTag(name: string): Promise<void> {
+  const response = await fetch("/api/tags", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ name }),
+  });
+  if (response.status === 401) throw new UnauthorizedApiError();
+  if (!response.ok) {
+    const body = (await response.json().catch(() => ({}))) as { error?: string };
+    throw new Error(body.error ?? "Failed to create tag");
+  }
+}
+
+async function deleteTagAction(id: string): Promise<void> {
+  const response = await fetch(`/api/tags/${id}`, { method: "DELETE" });
+  if (response.status === 401) throw new UnauthorizedApiError();
+  if (!response.ok) throw new Error("Failed to delete tag");
+}
+
 async function postEntryAction(entryId: string, action: "read" | "unread" | "bookmark" | "unbookmark") {
   const response = await fetch(`/api/entries/${entryId}/${action}`, { method: "POST" });
   if (response.status === 401) throw new UnauthorizedApiError();
@@ -73,10 +113,28 @@ async function postEntryAction(entryId: string, action: "read" | "unread" | "boo
   }
 }
 
+async function addTagToEntryAction(entryId: string, tagId: string): Promise<void> {
+  const response = await fetch(`/api/entries/${entryId}/tags`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ tagId }),
+  });
+  if (response.status === 401) throw new UnauthorizedApiError();
+  if (!response.ok) throw new Error("Failed to add tag to entry");
+}
+
+async function removeTagFromEntryAction(entryId: string, tagId: string): Promise<void> {
+  const response = await fetch(`/api/entries/${entryId}/tags/${tagId}`, { method: "DELETE" });
+  if (response.status === 401) throw new UnauthorizedApiError();
+  if (!response.ok) throw new Error("Failed to remove tag from entry");
+}
+
 async function deleteFeedAction(feedId: string): Promise<void> {
   const response = await fetch(`/api/feeds/${feedId}`, { method: "DELETE" });
   if (response.status === 401) throw new UnauthorizedApiError();
   if (!response.ok) throw new Error("Failed to unsubscribe feed");
+}
+
 }
 
 async function postSummarize(entryId: string) {
@@ -100,14 +158,20 @@ export function HomeClient() {
   const [unreadOnly, setUnreadOnly] = useState(false);
   const [activeView, setActiveView] = useState<"home" | "discover">("home");
   const [activeEntryId, setActiveEntryId] = useState<string | null>(null);
+  const [activeTagId, setActiveTagId] = useState<string | null>(null);
 
   // 選択中の記事データを個別に保持します。これにより、左側のリストからフィルター（「未読のみ」など）によって
   // 記事が消えた場合でも、右側の詳細表示が即座に消えてしまうのを防ぎます。
   const [activeEntryData, setActiveEntryData] = useState<EntryItemType | null>(null);
 
   const entriesQuery = useQuery({
-    queryKey: ["entries", { unreadOnly, search }],
-    queryFn: () => fetchEntries({ unreadOnly, search }),
+    queryKey: ["entries", { unreadOnly, search, tagId: activeTagId }],
+    queryFn: () => fetchEntries({ unreadOnly, search, tagId: activeTagId }),
+  });
+
+  const tagsQuery = useQuery({
+    queryKey: ["tags"],
+    queryFn: fetchTags,
   });
 
   const feedsQuery = useQuery({
@@ -153,13 +217,54 @@ export function HomeClient() {
     },
   });
 
+  const createTagMutation = useMutation({
+    mutationFn: postTag,
+    onSuccess: async () => {
+      clearErrorMessages();
+      await queryClient.invalidateQueries({ queryKey: ["tags"] });
+    },
+  });
+
+  const deleteTagMutation = useMutation({
+    mutationFn: deleteTagAction,
+    onSuccess: async (_, deletedTagId) => {
+      clearErrorMessages();
+      if (activeTagId === deletedTagId) {
+        setActiveTagId(null);
+      }
+      await queryClient.invalidateQueries({ queryKey: ["tags"] });
+      // Filter might have been cleared, so refresh entries too
+      await queryClient.invalidateQueries({ queryKey: ["entries"] });
+    },
+  });
+
+  const addTagMutation = useMutation({
+    mutationFn: async (input: { entryId: string; tagId: string }) => {
+      await addTagToEntryAction(input.entryId, input.tagId);
+    },
+    onSuccess: async () => {
+      clearErrorMessages();
+      await queryClient.invalidateQueries({ queryKey: ["entries"] });
+    },
+  });
+
+  const removeTagMutation = useMutation({
+    mutationFn: async (input: { entryId: string; tagId: string }) => {
+      await removeTagFromEntryAction(input.entryId, input.tagId);
+    },
+    onSuccess: async () => {
+      clearErrorMessages();
+      await queryClient.invalidateQueries({ queryKey: ["entries"] });
+    },
+  });
+
   const summarizeMutation = useMutation({
     mutationFn: async (entryId: string) => {
       return await postSummarize(entryId);
     },
     onSuccess: async (newEntry) => {
       clearErrorMessages();
-      queryClient.setQueryData(["entries", { unreadOnly, search }], (old: EntriesResponse | undefined) => {
+      queryClient.setQueryData(["entries", { unreadOnly, search, tagId: activeTagId }], (old: EntriesResponse | undefined) => {
         if (!old) return old;
         return {
           ...old,
@@ -176,21 +281,22 @@ export function HomeClient() {
     createFeedMutation.reset();
     entryActionMutation.reset();
     summarizeMutation.reset();
+    createTagMutation.reset();
+    deleteTagMutation.reset();
+    addTagMutation.reset();
+    removeTagMutation.reset();
     unsubscribeMutation.reset();
-  };
 
-  const errorMessage = useMemo(() => {
-    if (createFeedMutation.error) return createFeedMutation.error.message;
-    if (entriesQuery.error) return entriesQuery.error.message;
-    if (entryActionMutation.error) return entryActionMutation.error.message;
-    if (summarizeMutation.error) return summarizeMutation.error.message;
-    if (unsubscribeMutation.error) return unsubscribeMutation.error.message;
+    if (unsubscribeMutation.error && !(unsubscribeMutation.error instanceof UnauthorizedApiError)) return unsubscribeMutation.error.message;
     return null;
   }, [
     createFeedMutation.error,
     entriesQuery.error,
     entryActionMutation.error,
     summarizeMutation.error,
+    tagsQuery.error,
+    createTagMutation.error,
+    deleteTagMutation.error,
     unsubscribeMutation.error,
   ]);
 
@@ -214,6 +320,10 @@ export function HomeClient() {
     return activeEntryData;
   }, [activeEntryId, entriesQuery.data?.entries, activeEntryData]);
 
+  const userTags = useMemo(() => {
+    return (tagsQuery.data?.tags || []).filter((t) => !t.isSystem);
+  }, [tagsQuery.data?.tags]);
+
   return (
     <div className="flex h-screen overflow-hidden">
       {/* 1. Left Sidebar Navigation */}
@@ -222,13 +332,26 @@ export function HomeClient() {
           activeView={activeView}
           onViewChange={(view) => {
             setActiveView(view);
-            if (view === "discover") {
+            if (view === "discover" || view === "home") {
               setActiveEntryId(null);
+            }
+            if (view === "home") {
+              setActiveTagId(null);
             }
           }}
           onAddFeed={(url) => createFeedMutation.mutate(url)}
           isAdding={createFeedMutation.isPending}
           onClear={clear}
+          tags={userTags}
+          activeTagId={activeTagId}
+          onTagSelect={(id) => {
+            setActiveTagId((prev) => (prev === id ? null : id));
+            setActiveView("home");
+            setActiveEntryId(null);
+          }}
+          onCreateTag={(name) => createTagMutation.mutate(name)}
+          onDeleteTag={(id) => deleteTagMutation.mutate(id)}
+          isCreatingTag={createTagMutation.isPending}
         />
       </div>
 
@@ -276,6 +399,10 @@ export function HomeClient() {
                 entryActionMutation.mutate({ entryId: id, action })
               }
               isActionPending={entryActionMutation.isPending}
+              availableTags={tagsQuery.data?.tags || []}
+              onAddTag={(entryId, tagId) => addTagMutation.mutate({ entryId, tagId })}
+              onRemoveTag={(entryId, tagId) => removeTagMutation.mutate({ entryId, tagId })}
+              isTagActionPending={addTagMutation.isPending || removeTagMutation.isPending}
             />
           </div>
         </>

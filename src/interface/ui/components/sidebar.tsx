@@ -1,7 +1,10 @@
 "use client";
 
 import { useFeedFormStore } from "@/interface/ui/stores/feed-form-store";
-import { Plus, Trash2, Library, Folder, Rss, Loader2 } from "lucide-react";
+import { Plus, Trash2, Library, Rss, Loader2, Tag as TagIcon } from "lucide-react";
+import { useState } from "react";
+
+import { Tag } from "./home-client";
 
 interface SidebarProps {
   activeView: "home" | "discover";
@@ -9,10 +12,37 @@ interface SidebarProps {
   onAddFeed: (url: string) => void;
   isAdding: boolean;
   onClear: () => void;
+  tags: Tag[];
+  activeTagId: string | null;
+  onTagSelect: (id: string) => void;
+  onCreateTag: (name: string) => void;
+  onDeleteTag: (id: string) => void;
+  isCreatingTag: boolean;
 }
 
-export function Sidebar({ activeView, onViewChange, onAddFeed, isAdding, onClear }: SidebarProps) {
+export function Sidebar({
+  activeView,
+  onViewChange,
+  onAddFeed,
+  isAdding,
+  onClear,
+  tags,
+  activeTagId,
+  onTagSelect,
+  onCreateTag,
+  onDeleteTag,
+  isCreatingTag,
+}: SidebarProps) {
   const { draftUrl, setDraftUrl } = useFeedFormStore();
+  const [newTagName, setNewTagName] = useState("");
+
+  const handleCreateTag = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (newTagName.trim()) {
+      onCreateTag(newTagName.trim());
+      setNewTagName("");
+    }
+  };
 
   return (
     <aside className="w-80 flex flex-col h-full bg-m3-surface-container border-r border-m3-outline-variant transition-colors text-m3-on-surface">
@@ -86,31 +116,68 @@ export function Sidebar({ activeView, onViewChange, onAddFeed, isAdding, onClear
         {/* Divider */}
         <div className="h-px bg-m3-outline-variant my-6 mx-2" />
 
-        {/* Categories section */}
-        <div className="mb-6">
-          <h2 className="px-4 text-sm font-medium text-m3-on-surface-variant mb-3">
-            Categories
-          </h2>
-          <div className="space-y-1">
-            {[
-              { name: "Technology", count: 24 },
-              { name: "Design", count: 8 },
-              { name: "Business", count: 15 },
-              { name: "Science", count: 42 }
-            ].map((cat) => (
-              <button key={cat.name} className="w-full flex items-center justify-between px-4 py-3 rounded-full hover:bg-m3-surface-container-highest transition-colors group m3-state-layer">
-                <div className="flex items-center gap-4 text-m3-on-surface-variant group-hover:text-m3-on-surface">
-                  <Folder size={20} />
-                  <span className="text-sm font-medium">{cat.name}</span>
-                </div>
-                <span className="text-xs font-medium text-m3-on-surface-variant">
-                  {cat.count}
-                </span>
-              </button>
-            ))}
+        {/* Tags Section (Proposal 1: Navigation Style) */}
+        <div className="px-2">
+          <div className="flex items-center justify-between mb-3 px-2">
+            <h3 className="text-xs font-semibold uppercase tracking-wider text-m3-on-surface-variant flex items-center gap-2">
+              <TagIcon size={14} /> Tags
+            </h3>
           </div>
+
+          <nav className="space-y-1 mb-4">
+            {tags.map((tag) => (
+              <div
+                key={tag.id}
+                className="group flex items-center justify-between relative"
+              >
+                <button
+                  onClick={() => onTagSelect(tag.id)}
+                  className={`flex-1 flex items-center gap-3 px-3 py-2 rounded-full text-sm font-medium transition-colors m3-state-layer ${activeTagId === tag.id
+                    ? "bg-m3-secondary-container text-m3-on-secondary-container"
+                    : "text-m3-on-surface-variant hover:bg-m3-surface-container-highest"
+                    }`}
+                >
+                  <span className="truncate">{tag.name}</span>
+                </button>
+                <button
+                  onClick={() => onDeleteTag(tag.id)}
+                  className="absolute right-2 p-1.5 opacity-0 group-hover:opacity-100 hover:bg-m3-error-container hover:text-m3-on-error-container text-m3-on-surface-variant rounded-full transition-all m3-state-layer"
+                  title={`Delete ${tag.name}`}
+                >
+                  <Trash2 size={14} />
+                </button>
+              </div>
+            ))}
+            {tags.length === 0 && (
+              <p className="text-xs text-m3-on-surface-variant/70 italic px-3 py-2">
+                No tags created yet.
+              </p>
+            )}
+          </nav>
+
+          <form onSubmit={handleCreateTag} className="relative mt-2 px-1">
+            <input
+              type="text"
+              value={newTagName}
+              onChange={(e) => setNewTagName(e.target.value)}
+              placeholder="New tag..."
+              className="w-full bg-m3-surface-container-highest border border-m3-outline-variant/50 focus:border-m3-primary rounded-full pl-4 pr-10 py-1.5 text-xs focus:outline-none transition-colors placeholder:text-m3-on-surface-variant/70 text-m3-on-surface"
+              disabled={isCreatingTag}
+            />
+            <button
+              type="submit"
+              disabled={!newTagName.trim() || isCreatingTag}
+              className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 text-m3-primary hover:bg-m3-primary/10 rounded-full disabled:opacity-50 transition-colors"
+            >
+              {isCreatingTag ? <Loader2 size={12} className="animate-spin" /> : <Plus size={12} />}
+            </button>
+          </form>
         </div>
-      </div>
-    </aside>
+
+        {/* Divider */}
+        <div className="h-px bg-m3-outline-variant my-6 mx-2" />
+
+      </div >
+    </aside >
   );
 }

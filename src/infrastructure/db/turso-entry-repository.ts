@@ -59,11 +59,6 @@ export class TursoEntryRepository implements EntryRepository {
       args.push(filter.feedId);
     }
 
-    if (filter.folderId) {
-      conditions.push("s.folder_id = ?");
-      args.push(filter.folderId);
-    }
-
     if (filter.tagId) {
       conditions.push(
         "EXISTS (SELECT 1 FROM entry_tags et WHERE et.entry_id = e.id AND et.tag_id = ?)",

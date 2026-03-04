@@ -15,6 +15,7 @@ export interface EntryItemType {
   imageUrl?: string | null;
   isRead?: boolean;
   isBookmarked?: boolean;
+  tags?: { id: string; name: string }[];
 }
 
 interface EntryListProps {
@@ -129,11 +130,23 @@ export function EntryList({
                       {safeTitle}
                     </h3>
                     <div className="flex items-center justify-between mt-2">
-                      <span className={`text-xs line-clamp-1 ${isActive ? "text-m3-on-secondary-container/80" : "text-m3-on-surface-variant"}`}>
-                        {safeAuthor || "Unknown"} • {dateStr}
-                      </span>
+                      <div className="flex items-center gap-2 flex-1 min-w-0">
+                        <span className={`text-xs line-clamp-1 flex-shrink-0 ${isActive ? "text-m3-on-secondary-container/80" : "text-m3-on-surface-variant"}`}>
+                          {safeAuthor || "Unknown"} • {dateStr}
+                        </span>
+                        {entry.tags && entry.tags.length > 0 && (
+                          <div className="flex items-center gap-1 overflow-hidden" title={entry.tags.map(t => t.name).join(", ")}>
+                            {entry.tags.map(tag => (
+                              <span key={tag.id} className="text-[10px] font-medium bg-m3-secondary-container text-m3-on-secondary-container px-1.5 py-0.5 rounded-sm line-clamp-1 flex-shrink-0 max-w-[80px]">
+                                {tag.name}
+                              </span>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+
                       {entry.summary && (
-                        <span className="text-[10px] font-bold bg-m3-primary text-m3-on-primary px-1.5 py-0.5 rounded-md leading-none shadow-sm ml-2">
+                        <span className="text-[10px] font-bold bg-m3-primary text-m3-on-primary px-1.5 py-0.5 rounded-md leading-none shadow-sm ml-2 flex-shrink-0">
                           AI
                         </span>
                       )}

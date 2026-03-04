@@ -61,11 +61,6 @@ export class TursoSearchRepository implements SearchRepository {
       args.push(input.feedId);
     }
 
-    if (input.folderId) {
-      conditions.push("s.folder_id = ?");
-      args.push(input.folderId);
-    }
-
     if (input.tagId) {
       conditions.push(
         "EXISTS (SELECT 1 FROM entry_tags et WHERE et.entry_id = e.id AND et.tag_id = ?)",
